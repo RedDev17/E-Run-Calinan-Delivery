@@ -30,7 +30,7 @@ const Cart: React.FC<CartProps> = ({
           <p className="text-gray-600 mb-6">Add some delicious items to get started!</p>
           <button
             onClick={onContinueShopping}
-            className="bg-red-600 text-white px-6 py-3 rounded-full hover:bg-red-700 transition-all duration-200"
+            className="bg-green-primary text-white px-6 py-3 rounded-full hover:bg-green-dark transition-all duration-200 font-medium"
           >
             Browse Menu
           </button>
@@ -53,7 +53,7 @@ const Cart: React.FC<CartProps> = ({
         <h1 className="text-3xl font-noto font-semibold text-black">Your Cart</h1>
         <button
           onClick={clearCart}
-          className="text-red-500 hover:text-red-600 transition-colors duration-200"
+          className="text-red-500 hover:text-red-600 transition-colors duration-200 text-sm font-medium"
         >
           Clear All
         </button>
@@ -81,19 +81,19 @@ const Cart: React.FC<CartProps> = ({
               </div>
               
               <div className="flex items-center space-x-4 ml-4">
-                <div className="flex items-center space-x-3 bg-yellow-100 rounded-full p-1">
+                <div className="flex items-center space-x-3 bg-green-100 rounded-full p-1 border border-green-200">
                   <button
                     onClick={() => updateQuantity(item.id, item.quantity - 1)}
-                    className="p-2 hover:bg-yellow-200 rounded-full transition-colors duration-200"
+                    className="p-2 hover:bg-green-200 rounded-full transition-colors duration-200"
                   >
-                    <Minus className="h-4 w-4" />
+                    <Minus className="h-4 w-4 text-gray-700" />
                   </button>
                   <span className="font-semibold text-black min-w-[32px] text-center">{item.quantity}</span>
                   <button
                     onClick={() => updateQuantity(item.id, item.quantity + 1)}
-                    className="p-2 hover:bg-yellow-200 rounded-full transition-colors duration-200"
+                    className="p-2 hover:bg-green-200 rounded-full transition-colors duration-200"
                   >
-                    <Plus className="h-4 w-4" />
+                    <Plus className="h-4 w-4 text-gray-700" />
                   </button>
                 </div>
                 
@@ -121,7 +121,7 @@ const Cart: React.FC<CartProps> = ({
         
         <button
           onClick={onCheckout}
-          className="w-full bg-red-600 text-white py-4 rounded-xl hover:bg-red-700 transition-all duration-200 transform hover:scale-[1.02] font-medium text-lg"
+          className="w-full bg-green-primary text-white py-4 rounded-xl hover:bg-green-dark transition-all duration-200 transform hover:scale-[1.02] font-medium text-lg shadow-lg"
         >
           Proceed to Checkout
         </button>

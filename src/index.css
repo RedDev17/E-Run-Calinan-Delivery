@@ -2,14 +2,14 @@
 @tailwind components;
 @tailwind utilities;
 
-/* Ramen Yard Custom Styles */
-/* Minimal helpers for ramen palette when needed outside tailwind tokens */
-.bg-ramen-cream { background-color: #FFF3E0; }
-.bg-ramen-beige { background-color: #F7E7CE; }
-.text-ramen-red { color: #D7263D; }
+/* E-Run Calinan Delivery Custom Styles */
+/* Green and off-white theme */
+.bg-ramen-cream { background-color: #FAFAF9; }
+.bg-ramen-beige { background-color: #F7F7F7; }
+.text-ramen-red { color: #22C55E; }
 .text-ramen-dark { color: #0B0A0A; }
-.border-ramen-sesame { border-color: #D1C7B7; }
-.ring-ramen-gold { --tw-ring-color: #E0A106; }
+.border-ramen-sesame { border-color: #E5E5E5; }
+.ring-ramen-gold { --tw-ring-color: #22C55E; }
 
 /* Hide scrollbar for mobile nav */
 .scrollbar-hide {
@@ -35,4 +35,12 @@ img {
   top: -9999px;
   width: 1px;
   height: 1px;
+}
+
+/* Line clamp utility */
+.line-clamp-2 {
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
 }

@@ -6,10 +6,9 @@ export const useCart = () => {
   const [isCartOpen, setIsCartOpen] = useState(false);
 
   const calculateItemPrice = (item: MenuItem, variation?: Variation, addOns?: AddOn[]) => {
-    let price = item.basePrice;
-    if (variation) {
-      price += variation.price;
-    }
+    // Variations are free customization options (like "solo", "with drink", etc.)
+    // They don't affect the price - only add-ons do
+    let price = item.effectivePrice || item.basePrice;
     if (addOns) {
       addOns.forEach(addOn => {
         price += addOn.price;

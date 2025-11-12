@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useMemo } from 'react';
 import { MenuItem, CartItem } from '../types';
 import { useCategories } from '../hooks/useCategories';
 import MenuItemCard from './MenuItemCard';
@@ -19,29 +19,23 @@ interface MenuProps {
   addToCart: (item: MenuItem, quantity?: number, variation?: any, addOns?: any[]) => void;
   cartItems: CartItem[];
   updateQuantity: (id: string, quantity: number) => void;
+  activeCategory: string;
+  onCategoryClick: (categoryId: string) => void;
+  searchQuery: string;
 }
 
-const Menu: React.FC<MenuProps> = ({ menuItems, addToCart, cartItems, updateQuantity }) => {
+const Menu: React.FC<MenuProps> = ({ menuItems, addToCart, cartItems, updateQuantity, activeCategory, onCategoryClick, searchQuery }) => {
   const { categories } = useCategories();
-  const [activeCategory, setActiveCategory] = React.useState('hot-coffee');
 
   // Preload images when menu items change
   React.useEffect(() => {
     if (menuItems.length > 0) {
-      // Preload images for visible category first
-      const visibleItems = menuItems.filter(item => item.category === activeCategory);
-      preloadImages(visibleItems);
-      
-      // Then preload other images after a short delay
-      setTimeout(() => {
-        const otherItems = menuItems.filter(item => item.category !== activeCategory);
-        preloadImages(otherItems);
-      }, 1000);
+      preloadImages(menuItems);
     }
-  }, [menuItems, activeCategory]);
+  }, [menuItems]);
 
-  const handleCategoryClick = (categoryId: string) => {
-    setActiveCategory(categoryId);
+  const handleCategoryClickInternal = (categoryId: string) => {
+    onCategoryClick(categoryId);
     const element = document.getElementById(categoryId);
     if (element) {
       const headerHeight = 64; // Header height
@@ -56,79 +50,132 @@ const Menu: React.FC<MenuProps> = ({ menuItems, addToCart, cartItems, updateQuan
     }
   };
 
-  React.useEffect(() => {
-    if (categories.length > 0) {
-      // Set default to dim-sum if it exists, otherwise first category
-      const defaultCategory = categories.find(cat => cat.id === 'dim-sum') || categories[0];
-      if (!categories.find(cat => cat.id === activeCategory)) {
-        setActiveCategory(defaultCategory.id);
-      }
-    }
-  }, [categories, activeCategory]);
 
-  React.useEffect(() => {
-    const handleScroll = () => {
-      const sections = categories.map(cat => document.getElementById(cat.id)).filter(Boolean);
-      const scrollPosition = window.scrollY + 200;
-
-      for (let i = sections.length - 1; i >= 0; i--) {
-        const section = sections[i];
-        if (section && section.offsetTop <= scrollPosition) {
-          setActiveCategory(categories[i].id);
-          break;
-        }
-      }
-    };
-
-    window.addEventListener('scroll', handleScroll);
-    return () => window.removeEventListener('scroll', handleScroll);
-  }, []);
 
 
   return (
     <>
       <MobileNav 
         activeCategory={activeCategory}
-        onCategoryClick={handleCategoryClick}
+        onCategoryClick={handleCategoryClickInternal}
       />
-      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
-      <div className="text-center mb-12">
-        <h2 className="text-4xl font-noto font-semibold text-black mb-4">Our Menu</h2>
-        <p className="text-gray-600 max-w-2xl mx-auto">
-          Discover our selection of authentic dim sum, flavorful noodles, and traditional Asian dishes, 
-          all prepared with fresh ingredients and authentic techniques.
-        </p>
-      </div>
-
-      {categories.map((category) => {
-        const categoryItems = menuItems.filter(item => item.category === category.id);
-        
-        if (categoryItems.length === 0) return null;
-        
-        return (
-          <section key={category.id} id={category.id} className="mb-16">
-            <div className="flex items-center mb-8">
-              <span className="text-3xl mr-3">{category.icon}</span>
-              <h3 className="text-3xl font-noto font-medium text-black">{category.name}</h3>
-            </div>
+      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 md:py-8">
+        {/* Show search results or categories */}
+        {searchQuery.trim() ? (
+          // Search Results View
+          <div>
+            {menuItems.length > 0 ? (
+              <>
+                <div className="mb-6">
+                  <h2 className="text-2xl font-bold text-gray-900">
+                    Search Results ({menuItems.length})
+                  </h2>
+                  <p className="text-gray-600 mt-1">
+                    {activeCategory !== 'all' 
+                      ? `Found ${menuItems.length} item${menuItems.length !== 1 ? 's' : ''} in ${categories.find(c => c.id === activeCategory)?.name || ''} matching "${searchQuery}"`
+                      : `Found ${menuItems.length} item${menuItems.length !== 1 ? 's' : ''} matching "${searchQuery}"`
+                    }
+                  </p>
+                </div>
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 md:gap-6">
+                  {menuItems.map((item) => {
+                    const cartItem = cartItems.find(cartItem => cartItem.id === item.id);
+                    return (
+                      <MenuItemCard
+                        key={item.id}
+                        item={item}
+                        onAddToCart={addToCart}
+                        quantity={cartItem?.quantity || 0}
+                        onUpdateQuantity={updateQuantity}
+                      />
+                    );
+                  })}
+                </div>
+              </>
+            ) : (
+              <div className="text-center py-16">
+                <div className="text-6xl mb-4">🔍</div>
+                <h3 className="text-2xl font-bold text-gray-900 mb-2">No items found</h3>
+                <p className="text-gray-600 mb-6">
+                  {activeCategory !== 'all' 
+                    ? `We couldn't find any items in ${categories.find(c => c.id === activeCategory)?.name || ''} matching "${searchQuery}"`
+                    : `We couldn't find any items matching "${searchQuery}"`
+                  }
+                </p>
+                <button
+                  onClick={() => onCategoryClick('all')}
+                  className="bg-green-primary text-white px-6 py-3 rounded-lg hover:bg-green-dark transition-colors font-medium"
+                >
+                  Browse All Items
+                </button>
+              </div>
+            )}
+          </div>
+        ) : activeCategory !== 'all' ? (
+          // Single Category View
+          <div>
+            {menuItems.length > 0 ? (
+              <>
+                <div className="mb-6">
+                  <div className="flex items-center gap-3 mb-2">
+                    <span className="text-3xl">{categories.find(c => c.id === activeCategory)?.icon}</span>
+                    <h2 className="text-2xl font-bold text-gray-900">
+                      {categories.find(c => c.id === activeCategory)?.name}
+                    </h2>
+                  </div>
+                  <p className="text-gray-600">
+                    {menuItems.length} item{menuItems.length !== 1 ? 's' : ''} available
+                  </p>
+                </div>
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 md:gap-6">
+                  {menuItems.map((item) => {
+                    const cartItem = cartItems.find(cartItem => cartItem.id === item.id);
+                    return (
+                      <MenuItemCard
+                        key={item.id}
+                        item={item}
+                        onAddToCart={addToCart}
+                        quantity={cartItem?.quantity || 0}
+                        onUpdateQuantity={updateQuantity}
+                      />
+                    );
+                  })}
+                </div>
+              </>
+            ) : null}
+          </div>
+        ) : (
+          // Normal Category View (All categories)
+          categories.map((category) => {
+            const categoryItems = menuItems.filter(item => item.category === category.id);
             
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-              {categoryItems.map((item) => {
-                const cartItem = cartItems.find(cartItem => cartItem.id === item.id);
-                return (
-                  <MenuItemCard
-                    key={item.id}
-                    item={item}
-                    onAddToCart={addToCart}
-                    quantity={cartItem?.quantity || 0}
-                    onUpdateQuantity={updateQuantity}
-                  />
-                );
-              })}
-            </div>
-          </section>
-        );
-      })}
+            if (categoryItems.length === 0) return null;
+            
+            return (
+              <section key={category.id} id={category.id} className="mb-12 md:mb-16">
+                <div className="flex items-center mb-6 md:mb-8">
+                  <span className="text-2xl md:text-3xl mr-2 md:mr-3">{category.icon}</span>
+                  <h3 className="text-2xl md:text-3xl font-bold text-gray-900">{category.name}</h3>
+                </div>
+                
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 md:gap-6">
+                  {categoryItems.map((item) => {
+                    const cartItem = cartItems.find(cartItem => cartItem.id === item.id);
+                    return (
+                      <MenuItemCard
+                        key={item.id}
+                        item={item}
+                        onAddToCart={addToCart}
+                        quantity={cartItem?.quantity || 0}
+                        onUpdateQuantity={updateQuantity}
+                      />
+                    );
+                  })}
+                </div>
+              </section>
+            );
+          })
+        )}
       </main>
     </>
   );

@@ -75,3 +75,42 @@ export interface SiteSettings {
   currency: string;
   currency_code: string;
 }
+
+// Restaurant Types
+export interface Restaurant {
+  id: string;
+  name: string;
+  type: 'Restaurant' | 'Cafe' | 'Fast Food' | 'Bakery' | 'Desserts';
+  image: string;
+  rating: number;
+  reviewCount: number;
+  deliveryTime: string; // e.g., "30-45 mins", "45-60 mins"
+  deliveryFee: number; // e.g., 0
+  description?: string;
+  logo?: string;
+  active: boolean;
+  sort_order?: number;
+  created_at?: string;
+  updated_at?: string;
+}
+
+// Restaurant Menu Item (different from general MenuItem)
+export interface RestaurantMenuItem {
+  id: string;
+  restaurant_id: string;
+  name: string;
+  description: string;
+  basePrice: number;
+  category: string;
+  image?: string;
+  popular?: boolean;
+  available?: boolean;
+  variations?: Variation[];
+  addOns?: AddOn[];
+  discountPrice?: number;
+  discountStartDate?: string;
+  discountEndDate?: string;
+  discountActive?: boolean;
+  effectivePrice?: number;
+  isOnDiscount?: boolean;
+}

@@ -198,6 +198,56 @@ export type Database = {
           updated_at?: string;
         };
       };
+      restaurants: {
+        Row: {
+          id: string;
+          name: string;
+          type: 'Restaurant' | 'Cafe' | 'Fast Food' | 'Bakery' | 'Desserts';
+          image: string;
+          logo: string | null;
+          rating: number;
+          review_count: number;
+          delivery_time: string;
+          delivery_fee: number;
+          description: string | null;
+          active: boolean;
+          sort_order: number;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: {
+          id?: string;
+          name: string;
+          type: 'Restaurant' | 'Cafe' | 'Fast Food' | 'Bakery' | 'Desserts';
+          image: string;
+          logo?: string | null;
+          rating?: number;
+          review_count?: number;
+          delivery_time: string;
+          delivery_fee?: number;
+          description?: string | null;
+          active?: boolean;
+          sort_order?: number;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Update: {
+          id?: string;
+          name?: string;
+          type?: 'Restaurant' | 'Cafe' | 'Fast Food' | 'Bakery' | 'Desserts';
+          image?: string;
+          logo?: string | null;
+          rating?: number;
+          review_count?: number;
+          delivery_time?: string;
+          delivery_fee?: number;
+          description?: string | null;
+          active?: boolean;
+          sort_order?: number;
+          created_at?: string;
+          updated_at?: string;
+        };
+      };
     };
   };
 };

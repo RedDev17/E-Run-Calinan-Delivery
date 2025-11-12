@@ -1,13 +1,15 @@
 import React, { useState } from 'react';
-import { Plus, Edit, Trash2, Save, X, ArrowLeft, Coffee, TrendingUp, Package, Users, Lock, FolderOpen, CreditCard, Settings } from 'lucide-react';
+import { Plus, Edit, Trash2, Save, X, ArrowLeft, Coffee, TrendingUp, Package, Lock, FolderOpen, CreditCard, Settings } from 'lucide-react';
 import { MenuItem, Variation, AddOn } from '../types';
 import { addOnCategories } from '../data/menuData';
 import { useMenu } from '../hooks/useMenu';
-import { useCategories, Category } from '../hooks/useCategories';
+import { useCategories } from '../hooks/useCategories';
+import { useRestaurantsAdmin } from '../hooks/useRestaurantsAdmin';
 import ImageUpload from './ImageUpload';
 import CategoryManager from './CategoryManager';
 import PaymentMethodManager from './PaymentMethodManager';
 import SiteSettingsManager from './SiteSettingsManager';
+import RestaurantManager from './RestaurantManager';
 
 const AdminDashboard: React.FC = () => {
   const [isAuthenticated, setIsAuthenticated] = useState(() => {
@@ -17,7 +19,8 @@ const AdminDashboard: React.FC = () => {
   const [loginError, setLoginError] = useState('');
   const { menuItems, loading, addMenuItem, updateMenuItem, deleteMenuItem } = useMenu();
   const { categories } = useCategories();
-  const [currentView, setCurrentView] = useState<'dashboard' | 'items' | 'add' | 'edit' | 'categories' | 'payments' | 'settings'>('dashboard');
+  const { restaurants: adminRestaurants } = useRestaurantsAdmin();
+  const [currentView, setCurrentView] = useState<'dashboard' | 'items' | 'add' | 'edit' | 'categories' | 'payments' | 'settings' | 'restaurants'>('dashboard');
   const [editingItem, setEditingItem] = useState<MenuItem | null>(null);
   const [selectedItems, setSelectedItems] = useState<string[]>([]);
   const [isProcessing, setIsProcessing] = useState(false);
@@ -225,6 +228,8 @@ const AdminDashboard: React.FC = () => {
   const totalItems = menuItems.length;
   const popularItems = menuItems.filter(item => item.popular).length;
   const availableItems = menuItems.filter(item => item.available).length;
+  const restaurantCount = adminRestaurants.length;
+  const activeRestaurants = adminRestaurants.filter(r => r.active).length;
   const categoryCounts = categories.map(cat => ({
     ...cat,
     count: menuItems.filter(item => item.category === cat.id).length
@@ -232,7 +237,7 @@ const AdminDashboard: React.FC = () => {
 
   const handleLogin = (e: React.FormEvent) => {
     e.preventDefault();
-    if (password === 'ClickEats@Admin!2025') {
+    if (password === 'ERunCalinanDelivery@Admin!2025') {
       setIsAuthenticated(true);
       localStorage.setItem('beracah_admin_auth', 'true');
       setLoginError('');
@@ -926,6 +931,11 @@ const AdminDashboard: React.FC = () => {
     );
   }
 
+  // Restaurants View
+  if (currentView === 'restaurants') {
+    return <RestaurantManager onBack={() => setCurrentView('dashboard')} />;
+  }
+
   // Dashboard View
   return (
     <div className="min-h-screen bg-gray-50">
@@ -996,11 +1006,11 @@ const AdminDashboard: React.FC = () => {
           <div className="bg-white rounded-xl shadow-sm p-6">
             <div className="flex items-center">
               <div className="p-2 bg-green-500 rounded-lg">
-                <Users className="h-6 w-6 text-white" />
+                <Coffee className="h-6 w-6 text-white" />
               </div>
               <div className="ml-4">
-                <p className="text-sm font-medium text-gray-600">Active</p>
-                <p className="text-2xl font-semibold text-gray-900">Online</p>
+                <p className="text-sm font-medium text-gray-600">Restaurants</p>
+                <p className="text-2xl font-semibold text-gray-900">{activeRestaurants}/{restaurantCount}</p>
               </div>
             </div>
           </div>
@@ -1031,6 +1041,13 @@ const AdminDashboard: React.FC = () => {
               >
                 <FolderOpen className="h-5 w-5 text-gray-400" />
                 <span className="font-medium text-gray-900">Manage Categories</span>
+              </button>
+              <button
+                onClick={() => setCurrentView('restaurants')}
+                className="w-full flex items-center space-x-3 p-3 text-left hover:bg-gray-50 rounded-lg transition-colors duration-200"
+              >
+                <Coffee className="h-5 w-5 text-gray-400" />
+                <span className="font-medium text-gray-900">Manage Restaurants</span>
               </button>
               <button
                 onClick={() => setCurrentView('payments')}
