@@ -50,15 +50,27 @@ export const useImageUpload = () => {
       setUploadProgress(100);
 
       if (error) {
-        throw error;
+        // Check if it's a bucket not found error
+        if (error.message?.includes('Bucket not found') || error.message?.includes('The resource was not found')) {
+          throw new Error('Storage bucket "menu-images" not found. Please create it in Supabase Storage or use an image URL instead.');
+        }
+        throw new Error(error.message || 'Failed to upload image to storage');
+      }
+
+      if (!data) {
+        throw new Error('Upload succeeded but no data returned');
       }
 
       // Get public URL
-      const { data: { publicUrl } } = supabase.storage
+      const { data: urlData } = supabase.storage
         .from('menu-images')
         .getPublicUrl(data.path);
 
-      return publicUrl;
+      if (!urlData?.publicUrl) {
+        throw new Error('Failed to get public URL for uploaded image');
+      }
+
+      return urlData.publicUrl;
     } catch (error) {
       console.error('Error uploading image:', error);
       throw error;

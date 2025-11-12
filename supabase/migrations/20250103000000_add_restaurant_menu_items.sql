@@ -273,16 +273,16 @@ BEGIN
   END IF;
 END $$;
 
--- Create Jollibee-specific categories
+-- Create categories
 INSERT INTO categories (id, name, icon, sort_order, active) VALUES
-  ('jollibee-burgers', 'Burgers', '🍔', 1, true),
-  ('jollibee-chicken', 'Chicken', '🍗', 2, true),
-  ('jollibee-spaghetti', 'Spaghetti & Pasta', '🍝', 3, true),
-  ('jollibee-rice-meals', 'Rice Meals', '🍛', 4, true),
-  ('jollibee-desserts', 'Desserts', '🍰', 5, true),
-  ('jollibee-drinks', 'Drinks', '🥤', 6, true),
-  ('jollibee-breakfast', 'Breakfast', '🥞', 7, true),
-  ('jollibee-sides', 'Sides & Add-ons', '🍟', 8, true)
+  ('burgers', 'Burgers', '🍔', 1, true),
+  ('chicken', 'Chicken', '🍗', 2, true),
+  ('spaghetti', 'Spaghetti & Pasta', '🍝', 3, true),
+  ('rice-meals', 'Rice Meals', '🍛', 4, true),
+  ('desserts', 'Desserts', '🍰', 5, true),
+  ('drinks', 'Drinks', '🥤', 6, true),
+  ('breakfast', 'Breakfast', '🥞', 7, true),
+  ('sides', 'Sides & Add-ons', '🍟', 8, true)
 ON CONFLICT (id) DO UPDATE SET
   name = EXCLUDED.name,
   icon = EXCLUDED.icon,
@@ -331,88 +331,88 @@ BEGIN
   
   -- BURGERS
   INSERT INTO menu_items (name, description, base_price, category, popular, available, image_url, restaurant_id) VALUES
-    ('Yum Burger', 'Jollibee''s classic burger with special dressing, lettuce, and mayonnaise', 65.00, 'jollibee-burgers', true, true, 'https://images.unsplash.com/photo-1568901346375-23c9450c58cd?w=800&h=600&fit=crop', jollibee_id),
-    ('Yum Burger with Cheese', 'Classic Yum Burger topped with a slice of cheese', 75.00, 'jollibee-burgers', true, true, 'https://images.unsplash.com/photo-1568901346375-23c9450c58cd?w=800&h=600&fit=crop', jollibee_id),
-    ('Champ Burger', '100% pure beef patty, special dressing, lettuce, and mayonnaise in a sesame seed bun', 95.00, 'jollibee-burgers', true, true, 'https://images.unsplash.com/photo-1550547660-d9450f859349?w=800&h=600&fit=crop', jollibee_id),
-    ('Champ Burger with Cheese', 'Champ Burger with a slice of cheese', 105.00, 'jollibee-burgers', true, true, 'https://images.unsplash.com/photo-1550547660-d9450f859349?w=800&h=600&fit=crop', jollibee_id),
-    ('Chicken Burger', 'Crispy chicken patty with special dressing, lettuce, and mayonnaise', 85.00, 'jollibee-burgers', false, true, 'https://images.unsplash.com/photo-1606755962773-d324e7833f15?w=800&h=600&fit=crop', jollibee_id),
-    ('Bacon Champ', 'Champ Burger with crispy bacon strips', 115.00, 'jollibee-burgers', false, true, 'https://images.unsplash.com/photo-1550547660-d9450f859349?w=800&h=600&fit=crop', jollibee_id);
+    ('Yum Burger', 'Jollibee''s classic burger with special dressing, lettuce, and mayonnaise', 65.00, 'burgers', true, true, 'https://images.unsplash.com/photo-1568901346375-23c9450c58cd?w=800&h=600&fit=crop', jollibee_id),
+    ('Yum Burger with Cheese', 'Classic Yum Burger topped with a slice of cheese', 75.00, 'burgers', true, true, 'https://images.unsplash.com/photo-1568901346375-23c9450c58cd?w=800&h=600&fit=crop', jollibee_id),
+    ('Champ Burger', '100% pure beef patty, special dressing, lettuce, and mayonnaise in a sesame seed bun', 95.00, 'burgers', true, true, 'https://images.unsplash.com/photo-1550547660-d9450f859349?w=800&h=600&fit=crop', jollibee_id),
+    ('Champ Burger with Cheese', 'Champ Burger with a slice of cheese', 105.00, 'burgers', true, true, 'https://images.unsplash.com/photo-1550547660-d9450f859349?w=800&h=600&fit=crop', jollibee_id),
+    ('Chicken Burger', 'Crispy chicken patty with special dressing, lettuce, and mayonnaise', 85.00, 'burgers', false, true, 'https://images.unsplash.com/photo-1606755962773-d324e7833f15?w=800&h=600&fit=crop', jollibee_id),
+    ('Bacon Champ', 'Champ Burger with crispy bacon strips', 115.00, 'burgers', false, true, 'https://images.unsplash.com/photo-1550547660-d9450f859349?w=800&h=600&fit=crop', jollibee_id);
 
   -- CHICKEN
   INSERT INTO menu_items (name, description, base_price, category, popular, available, image_url, restaurant_id) VALUES
-    ('1-Piece Chickenjoy', 'Jollibee''s signature crispy fried chicken - juicy, tender, and perfectly seasoned', 95.00, 'jollibee-chicken', true, true, 'https://images.unsplash.com/photo-1626082927389-6cd097cdc6ec?w=800&h=600&fit=crop', jollibee_id),
-    ('2-Piece Chickenjoy', 'Two pieces of crispy fried chicken with rice', 175.00, 'jollibee-chicken', true, true, 'https://images.unsplash.com/photo-1626082927389-6cd097cdc6ec?w=800&h=600&fit=crop', jollibee_id),
-    ('6-Piece Chickenjoy Bucket', 'Six pieces of crispy fried chicken - perfect for sharing', 495.00, 'jollibee-chicken', true, true, 'https://images.unsplash.com/photo-1626082927389-6cd097cdc6ec?w=800&h=600&fit=crop', jollibee_id),
-    ('8-Piece Chickenjoy Bucket', 'Eight pieces of crispy fried chicken - great for families', 645.00, 'jollibee-chicken', false, true, 'https://images.unsplash.com/photo-1626082927389-6cd097cdc6ec?w=800&h=600&fit=crop', jollibee_id),
-    ('Chickenjoy with Spaghetti', '1-Piece Chickenjoy with Jollibee Spaghetti', 145.00, 'jollibee-chicken', true, true, 'https://images.unsplash.com/photo-1626082927389-6cd097cdc6ec?w=800&h=600&fit=crop', jollibee_id),
-    ('2-Piece Chickenjoy with Spaghetti', 'Two pieces of Chickenjoy with Jollibee Spaghetti', 205.00, 'jollibee-chicken', false, true, 'https://images.unsplash.com/photo-1626082927389-6cd097cdc6ec?w=800&h=600&fit=crop', jollibee_id);
+    ('1-Piece Chickenjoy', 'Jollibee''s signature crispy fried chicken - juicy, tender, and perfectly seasoned', 95.00, 'chicken', true, true, 'https://images.unsplash.com/photo-1626082927389-6cd097cdc6ec?w=800&h=600&fit=crop', jollibee_id),
+    ('2-Piece Chickenjoy', 'Two pieces of crispy fried chicken with rice', 175.00, 'chicken', true, true, 'https://images.unsplash.com/photo-1626082927389-6cd097cdc6ec?w=800&h=600&fit=crop', jollibee_id),
+    ('6-Piece Chickenjoy Bucket', 'Six pieces of crispy fried chicken - perfect for sharing', 495.00, 'chicken', true, true, 'https://images.unsplash.com/photo-1626082927389-6cd097cdc6ec?w=800&h=600&fit=crop', jollibee_id),
+    ('8-Piece Chickenjoy Bucket', 'Eight pieces of crispy fried chicken - great for families', 645.00, 'chicken', false, true, 'https://images.unsplash.com/photo-1626082927389-6cd097cdc6ec?w=800&h=600&fit=crop', jollibee_id),
+    ('Chickenjoy with Spaghetti', '1-Piece Chickenjoy with Jollibee Spaghetti', 145.00, 'chicken', true, true, 'https://images.unsplash.com/photo-1626082927389-6cd097cdc6ec?w=800&h=600&fit=crop', jollibee_id),
+    ('2-Piece Chickenjoy with Spaghetti', 'Two pieces of Chickenjoy with Jollibee Spaghetti', 205.00, 'chicken', false, true, 'https://images.unsplash.com/photo-1626082927389-6cd097cdc6ec?w=800&h=600&fit=crop', jollibee_id);
 
   -- SPAGHETTI & PASTA
   INSERT INTO menu_items (name, description, base_price, category, popular, available, image_url, restaurant_id) VALUES
-    ('Jolly Spaghetti', 'Jollibee''s signature sweet-style spaghetti with sliced hotdogs, ground meat, and cheese', 65.00, 'jollibee-spaghetti', true, true, 'https://images.unsplash.com/photo-1621996346565-e3dbc646d9a9?w=800&h=600&fit=crop', jollibee_id),
-    ('Jolly Spaghetti (Family Pan)', 'Family-sized Jolly Spaghetti - perfect for sharing', 265.00, 'jollibee-spaghetti', false, true, 'https://images.unsplash.com/photo-1621996346565-e3dbc646d9a9?w=800&h=600&fit=crop', jollibee_id),
-    ('Jolly Spaghetti with Yum Burger', 'Jolly Spaghetti with one Yum Burger', 115.00, 'jollibee-spaghetti', true, true, 'https://images.unsplash.com/photo-1621996346565-e3dbc646d9a9?w=800&h=600&fit=crop', jollibee_id),
-    ('Jolly Spaghetti with 1-Piece Chickenjoy', 'Jolly Spaghetti with one piece of Chickenjoy', 145.00, 'jollibee-spaghetti', true, true, 'https://images.unsplash.com/photo-1621996346565-e3dbc646d9a9?w=800&h=600&fit=crop', jollibee_id);
+    ('Jolly Spaghetti', 'Jollibee''s signature sweet-style spaghetti with sliced hotdogs, ground meat, and cheese', 65.00, 'spaghetti', true, true, 'https://images.unsplash.com/photo-1621996346565-e3dbc646d9a9?w=800&h=600&fit=crop', jollibee_id),
+    ('Jolly Spaghetti (Family Pan)', 'Family-sized Jolly Spaghetti - perfect for sharing', 265.00, 'spaghetti', false, true, 'https://images.unsplash.com/photo-1621996346565-e3dbc646d9a9?w=800&h=600&fit=crop', jollibee_id),
+    ('Jolly Spaghetti with Yum Burger', 'Jolly Spaghetti with one Yum Burger', 115.00, 'spaghetti', true, true, 'https://images.unsplash.com/photo-1621996346565-e3dbc646d9a9?w=800&h=600&fit=crop', jollibee_id),
+    ('Jolly Spaghetti with 1-Piece Chickenjoy', 'Jolly Spaghetti with one piece of Chickenjoy', 145.00, 'spaghetti', true, true, 'https://images.unsplash.com/photo-1621996346565-e3dbc646d9a9?w=800&h=600&fit=crop', jollibee_id);
 
   -- RICE MEALS
   INSERT INTO menu_items (name, description, base_price, category, popular, available, image_url, restaurant_id) VALUES
-    ('1-Piece Chickenjoy with Rice', 'One piece of crispy Chickenjoy served with steamed rice', 105.00, 'jollibee-rice-meals', true, true, 'https://images.unsplash.com/photo-1544025162-d76694265947?w=800&h=600&fit=crop', jollibee_id),
-    ('2-Piece Chickenjoy with Rice', 'Two pieces of crispy Chickenjoy served with steamed rice', 175.00, 'jollibee-rice-meals', true, true, 'https://images.unsplash.com/photo-1544025162-d76694265947?w=800&h=600&fit=crop', jollibee_id),
-    ('1-Piece Chickenjoy with Rice & Drink', 'One piece of Chickenjoy with rice and your choice of drink', 125.00, 'jollibee-rice-meals', true, true, 'https://images.unsplash.com/photo-1544025162-d76694265947?w=800&h=600&fit=crop', jollibee_id),
-    ('Burger Steak', 'Savory burger patties in rich mushroom gravy served with steamed rice', 75.00, 'jollibee-rice-meals', true, true, 'https://images.unsplash.com/photo-1606755962773-d324e7833f15?w=800&h=600&fit=crop', jollibee_id),
-    ('Burger Steak (2 pieces)', 'Two burger patties in rich mushroom gravy served with steamed rice', 105.00, 'jollibee-rice-meals', false, true, 'https://images.unsplash.com/photo-1606755962773-d324e7833f15?w=800&h=600&fit=crop', jollibee_id),
-    ('Palabok Fiesta', 'Traditional Filipino noodle dish with shrimp sauce, chicharon, and eggs', 95.00, 'jollibee-rice-meals', true, true, 'https://images.unsplash.com/photo-1621996346565-e3dbc646d9a9?w=800&h=600&fit=crop', jollibee_id),
-    ('Jolly Hotdog', 'Classic hotdog sandwich served with rice', 75.00, 'jollibee-rice-meals', false, true, 'https://images.unsplash.com/photo-1550547660-d9450f859349?w=800&h=600&fit=crop', jollibee_id);
+    ('1-Piece Chickenjoy with Rice', 'One piece of crispy Chickenjoy served with steamed rice', 105.00, 'rice-meals', true, true, 'https://images.unsplash.com/photo-1544025162-d76694265947?w=800&h=600&fit=crop', jollibee_id),
+    ('2-Piece Chickenjoy with Rice', 'Two pieces of crispy Chickenjoy served with steamed rice', 175.00, 'rice-meals', true, true, 'https://images.unsplash.com/photo-1544025162-d76694265947?w=800&h=600&fit=crop', jollibee_id),
+    ('1-Piece Chickenjoy with Rice & Drink', 'One piece of Chickenjoy with rice and your choice of drink', 125.00, 'rice-meals', true, true, 'https://images.unsplash.com/photo-1544025162-d76694265947?w=800&h=600&fit=crop', jollibee_id),
+    ('Burger Steak', 'Savory burger patties in rich mushroom gravy served with steamed rice', 75.00, 'rice-meals', true, true, 'https://images.unsplash.com/photo-1606755962773-d324e7833f15?w=800&h=600&fit=crop', jollibee_id),
+    ('Burger Steak (2 pieces)', 'Two burger patties in rich mushroom gravy served with steamed rice', 105.00, 'rice-meals', false, true, 'https://images.unsplash.com/photo-1606755962773-d324e7833f15?w=800&h=600&fit=crop', jollibee_id),
+    ('Palabok Fiesta', 'Traditional Filipino noodle dish with shrimp sauce, chicharon, and eggs', 95.00, 'rice-meals', true, true, 'https://images.unsplash.com/photo-1621996346565-e3dbc646d9a9?w=800&h=600&fit=crop', jollibee_id),
+    ('Jolly Hotdog', 'Classic hotdog sandwich served with rice', 75.00, 'rice-meals', false, true, 'https://images.unsplash.com/photo-1550547660-d9450f859349?w=800&h=600&fit=crop', jollibee_id);
 
   -- BREAKFAST
   INSERT INTO menu_items (name, description, base_price, category, popular, available, image_url, restaurant_id) VALUES
-    ('Longganisa', 'Filipino-style sweet sausages served with steamed rice and egg', 85.00, 'jollibee-breakfast', true, true, 'https://images.unsplash.com/photo-1588168333986-5078d3ae3976?w=800&h=600&fit=crop', jollibee_id),
-    ('Tapa', 'Marinated beef tapa served with steamed rice and egg', 95.00, 'jollibee-breakfast', true, true, 'https://images.unsplash.com/photo-1588168333986-5078d3ae3976?w=800&h=600&fit=crop', jollibee_id),
-    ('Corned Beef', 'Savory corned beef served with steamed rice and egg', 85.00, 'jollibee-breakfast', false, true, 'https://images.unsplash.com/photo-1588168333986-5078d3ae3976?w=800&h=600&fit=crop', jollibee_id),
-    ('Breakfast Steak', 'Tender breakfast steak served with steamed rice and egg', 95.00, 'jollibee-breakfast', false, true, 'https://images.unsplash.com/photo-1588168333986-5078d3ae3976?w=800&h=600&fit=crop', jollibee_id),
-    ('Pancake', 'Fluffy pancakes served with butter and syrup', 65.00, 'jollibee-breakfast', false, true, 'https://images.unsplash.com/photo-1567620905732-2d1ec7ab7445?w=800&h=600&fit=crop', jollibee_id);
+    ('Longganisa', 'Filipino-style sweet sausages served with steamed rice and egg', 85.00, 'breakfast', true, true, 'https://images.unsplash.com/photo-1588168333986-5078d3ae3976?w=800&h=600&fit=crop', jollibee_id),
+    ('Tapa', 'Marinated beef tapa served with steamed rice and egg', 95.00, 'breakfast', true, true, 'https://images.unsplash.com/photo-1588168333986-5078d3ae3976?w=800&h=600&fit=crop', jollibee_id),
+    ('Corned Beef', 'Savory corned beef served with steamed rice and egg', 85.00, 'breakfast', false, true, 'https://images.unsplash.com/photo-1588168333986-5078d3ae3976?w=800&h=600&fit=crop', jollibee_id),
+    ('Breakfast Steak', 'Tender breakfast steak served with steamed rice and egg', 95.00, 'breakfast', false, true, 'https://images.unsplash.com/photo-1588168333986-5078d3ae3976?w=800&h=600&fit=crop', jollibee_id),
+    ('Pancake', 'Fluffy pancakes served with butter and syrup', 65.00, 'breakfast', false, true, 'https://images.unsplash.com/photo-1567620905732-2d1ec7ab7445?w=800&h=600&fit=crop', jollibee_id);
 
   -- DESSERTS
   INSERT INTO menu_items (name, description, base_price, category, popular, available, image_url, restaurant_id) VALUES
-    ('Peach Mango Pie', 'Crispy pie filled with sweet peach mango filling', 45.00, 'jollibee-desserts', true, true, 'https://images.unsplash.com/photo-1555507036-ab1f4038808a?w=800&h=600&fit=crop', jollibee_id),
-    ('Choco Mallow Pie', 'Crispy pie filled with chocolate and marshmallow', 45.00, 'jollibee-desserts', true, true, 'https://images.unsplash.com/photo-1555507036-ab1f4038808a?w=800&h=600&fit=crop', jollibee_id),
-    ('Sundae (Chocolate)', 'Creamy vanilla ice cream topped with rich chocolate syrup', 35.00, 'jollibee-desserts', true, true, 'https://images.unsplash.com/photo-1563805042-7684c019e1cb?w=800&h=600&fit=crop', jollibee_id),
-    ('Sundae (Strawberry)', 'Creamy vanilla ice cream topped with sweet strawberry syrup', 35.00, 'jollibee-desserts', false, true, 'https://images.unsplash.com/photo-1563805042-7684c019e1cb?w=800&h=600&fit=crop', jollibee_id),
-    ('Halo-Halo', 'Traditional Filipino shaved ice dessert with mixed fruits, leche flan, and ube ice cream', 85.00, 'jollibee-desserts', true, true, 'https://images.unsplash.com/photo-1551782450-17144efb9c50?w=800&h=600&fit=crop', jollibee_id),
-    ('Jolly Twirls', 'Soft-serve ice cream in a cone', 25.00, 'jollibee-desserts', false, true, 'https://images.unsplash.com/photo-1563805042-7684c019e1cb?w=800&h=600&fit=crop', jollibee_id);
+    ('Peach Mango Pie', 'Crispy pie filled with sweet peach mango filling', 45.00, 'desserts', true, true, 'https://images.unsplash.com/photo-1555507036-ab1f4038808a?w=800&h=600&fit=crop', jollibee_id),
+    ('Choco Mallow Pie', 'Crispy pie filled with chocolate and marshmallow', 45.00, 'desserts', true, true, 'https://images.unsplash.com/photo-1555507036-ab1f4038808a?w=800&h=600&fit=crop', jollibee_id),
+    ('Sundae (Chocolate)', 'Creamy vanilla ice cream topped with rich chocolate syrup', 35.00, 'desserts', true, true, 'https://images.unsplash.com/photo-1563805042-7684c019e1cb?w=800&h=600&fit=crop', jollibee_id),
+    ('Sundae (Strawberry)', 'Creamy vanilla ice cream topped with sweet strawberry syrup', 35.00, 'desserts', false, true, 'https://images.unsplash.com/photo-1563805042-7684c019e1cb?w=800&h=600&fit=crop', jollibee_id),
+    ('Halo-Halo', 'Traditional Filipino shaved ice dessert with mixed fruits, leche flan, and ube ice cream', 85.00, 'desserts', true, true, 'https://images.unsplash.com/photo-1551782450-17144efb9c50?w=800&h=600&fit=crop', jollibee_id),
+    ('Jolly Twirls', 'Soft-serve ice cream in a cone', 25.00, 'desserts', false, true, 'https://images.unsplash.com/photo-1563805042-7684c019e1cb?w=800&h=600&fit=crop', jollibee_id);
 
   -- DRINKS
   INSERT INTO menu_items (name, description, base_price, category, popular, available, image_url, restaurant_id) VALUES
-    ('Pineapple Juice', 'Refreshing pineapple juice', 45.00, 'jollibee-drinks', true, true, 'https://images.unsplash.com/photo-1600271886742-f049cd451bba?w=800&h=600&fit=crop', jollibee_id),
-    ('Coke Float', 'Classic Coca-Cola with creamy vanilla ice cream', 55.00, 'jollibee-drinks', true, true, 'https://images.unsplash.com/photo-1554866585-cd94860890b7?w=800&h=600&fit=crop', jollibee_id),
-    ('Pineapple Juice Float', 'Pineapple juice with creamy vanilla ice cream', 55.00, 'jollibee-drinks', false, true, 'https://images.unsplash.com/photo-1554866585-cd94860890b7?w=800&h=600&fit=crop', jollibee_id),
-    ('Coca-Cola (Regular)', 'Classic Coca-Cola soft drink', 35.00, 'jollibee-drinks', true, true, 'https://images.unsplash.com/photo-1554866585-cd94860890b7?w=800&h=600&fit=crop', jollibee_id),
-    ('Sprite (Regular)', 'Refreshing lemon-lime soft drink', 35.00, 'jollibee-drinks', false, true, 'https://images.unsplash.com/photo-1554866585-cd94860890b7?w=800&h=600&fit=crop', jollibee_id),
-    ('Royal (Regular)', 'Refreshing orange soft drink', 35.00, 'jollibee-drinks', false, true, 'https://images.unsplash.com/photo-1554866585-cd94860890b7?w=800&h=600&fit=crop', jollibee_id),
-    ('Iced Tea', 'Refreshing iced tea', 35.00, 'jollibee-drinks', false, true, 'https://images.unsplash.com/photo-1556679343-c7306c1976bc?w=800&h=600&fit=crop', jollibee_id),
-    ('Hot Coffee', 'Hot brewed coffee', 40.00, 'jollibee-drinks', false, true, 'https://images.unsplash.com/photo-1517487881594-2787fef5ebf7?w=800&h=600&fit=crop', jollibee_id);
+    ('Pineapple Juice', 'Refreshing pineapple juice', 45.00, 'drinks', true, true, 'https://images.unsplash.com/photo-1600271886742-f049cd451bba?w=800&h=600&fit=crop', jollibee_id),
+    ('Coke Float', 'Classic Coca-Cola with creamy vanilla ice cream', 55.00, 'drinks', true, true, 'https://images.unsplash.com/photo-1554866585-cd94860890b7?w=800&h=600&fit=crop', jollibee_id),
+    ('Pineapple Juice Float', 'Pineapple juice with creamy vanilla ice cream', 55.00, 'drinks', false, true, 'https://images.unsplash.com/photo-1554866585-cd94860890b7?w=800&h=600&fit=crop', jollibee_id),
+    ('Coca-Cola (Regular)', 'Classic Coca-Cola soft drink', 35.00, 'drinks', true, true, 'https://images.unsplash.com/photo-1554866585-cd94860890b7?w=800&h=600&fit=crop', jollibee_id),
+    ('Sprite (Regular)', 'Refreshing lemon-lime soft drink', 35.00, 'drinks', false, true, 'https://images.unsplash.com/photo-1554866585-cd94860890b7?w=800&h=600&fit=crop', jollibee_id),
+    ('Royal (Regular)', 'Refreshing orange soft drink', 35.00, 'drinks', false, true, 'https://images.unsplash.com/photo-1554866585-cd94860890b7?w=800&h=600&fit=crop', jollibee_id),
+    ('Iced Tea', 'Refreshing iced tea', 35.00, 'drinks', false, true, 'https://images.unsplash.com/photo-1556679343-c7306c1976bc?w=800&h=600&fit=crop', jollibee_id),
+    ('Hot Coffee', 'Hot brewed coffee', 40.00, 'drinks', false, true, 'https://images.unsplash.com/photo-1517487881594-2787fef5ebf7?w=800&h=600&fit=crop', jollibee_id);
 
   -- SIDES & ADD-ONS
   INSERT INTO menu_items (name, description, base_price, category, popular, available, image_url, restaurant_id) VALUES
-    ('Jolly Crispy Fries (Regular)', 'Crispy golden French fries', 55.00, 'jollibee-sides', true, true, 'https://images.unsplash.com/photo-1573080496219-bb080dd4f877?w=800&h=600&fit=crop', jollibee_id),
-    ('Jolly Crispy Fries (Large)', 'Large serving of crispy golden French fries', 85.00, 'jollibee-sides', false, true, 'https://images.unsplash.com/photo-1573080496219-bb080dd4f877?w=800&h=600&fit=crop', jollibee_id),
-    ('Rice (Regular)', 'Steamed white rice', 25.00, 'jollibee-sides', true, true, 'https://images.unsplash.com/photo-1586201375761-83865001e31c?w=800&h=600&fit=crop', jollibee_id),
-    ('Rice (Large)', 'Large serving of steamed white rice', 35.00, 'jollibee-sides', false, true, 'https://images.unsplash.com/photo-1586201375761-83865001e31c?w=800&h=600&fit=crop', jollibee_id),
-    ('Gravy (Regular)', 'Rich mushroom gravy', 25.00, 'jollibee-sides', false, true, 'https://images.unsplash.com/photo-1588168333986-5078d3ae3976?w=800&h=600&fit=crop', jollibee_id),
-    ('Extra Egg', 'Additional fried egg', 15.00, 'jollibee-sides', false, true, 'https://images.unsplash.com/photo-1588168333986-5078d3ae3976?w=800&h=600&fit=crop', jollibee_id);
+    ('Jolly Crispy Fries (Regular)', 'Crispy golden French fries', 55.00, 'sides', true, true, 'https://images.unsplash.com/photo-1573080496219-bb080dd4f877?w=800&h=600&fit=crop', jollibee_id),
+    ('Jolly Crispy Fries (Large)', 'Large serving of crispy golden French fries', 85.00, 'sides', false, true, 'https://images.unsplash.com/photo-1573080496219-bb080dd4f877?w=800&h=600&fit=crop', jollibee_id),
+    ('Rice (Regular)', 'Steamed white rice', 25.00, 'sides', true, true, 'https://images.unsplash.com/photo-1586201375761-83865001e31c?w=800&h=600&fit=crop', jollibee_id),
+    ('Rice (Large)', 'Large serving of steamed white rice', 35.00, 'sides', false, true, 'https://images.unsplash.com/photo-1586201375761-83865001e31c?w=800&h=600&fit=crop', jollibee_id),
+    ('Gravy (Regular)', 'Rich mushroom gravy', 25.00, 'sides', false, true, 'https://images.unsplash.com/photo-1588168333986-5078d3ae3976?w=800&h=600&fit=crop', jollibee_id),
+    ('Extra Egg', 'Additional fried egg', 15.00, 'sides', false, true, 'https://images.unsplash.com/photo-1588168333986-5078d3ae3976?w=800&h=600&fit=crop', jollibee_id);
 
   -- Add variations for drinks (size options)
   INSERT INTO variations (menu_item_id, name, price)
   SELECT mi.id, 'Regular', 0
   FROM menu_items mi
-  WHERE mi.category = 'jollibee-drinks' 
+  WHERE mi.category = 'drinks' 
     AND mi.name IN ('Coca-Cola (Regular)', 'Sprite (Regular)', 'Royal (Regular)', 'Iced Tea', 'Hot Coffee')
     AND mi.restaurant_id = jollibee_id;
   
   INSERT INTO variations (menu_item_id, name, price)
   SELECT mi.id, 'Large', 10
   FROM menu_items mi
-  WHERE mi.category = 'jollibee-drinks' 
+  WHERE mi.category = 'drinks' 
     AND mi.name IN ('Coca-Cola (Regular)', 'Sprite (Regular)', 'Royal (Regular)', 'Iced Tea', 'Hot Coffee')
     AND mi.restaurant_id = jollibee_id;
 

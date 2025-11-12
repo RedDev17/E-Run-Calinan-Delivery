@@ -22,14 +22,18 @@ const ImageUpload: React.FC<ImageUploadProps> = ({
 
     try {
       const imageUrl = await uploadImage(file);
-      onImageChange(imageUrl);
+      if (imageUrl) {
+        onImageChange(imageUrl);
+      }
     } catch (error) {
-      alert(error instanceof Error ? error.message : 'Failed to upload image');
-    }
-
-    // Reset file input
-    if (fileInputRef.current) {
-      fileInputRef.current.value = '';
+      console.error('Image upload error:', error);
+      const errorMessage = error instanceof Error ? error.message : 'Failed to upload image';
+      alert(`Image upload failed: ${errorMessage}\n\nYou can still enter an image URL manually below.`);
+    } finally {
+      // Reset file input
+      if (fileInputRef.current) {
+        fileInputRef.current.value = '';
+      }
     }
   };
 

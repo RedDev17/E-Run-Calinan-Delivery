@@ -1,5 +1,5 @@
 import React from 'react';
-import { Heart, Clock, Star } from 'lucide-react';
+import { Clock, Star } from 'lucide-react';
 import { Restaurant } from '../types';
 
 interface RestaurantCardProps {
@@ -23,17 +23,6 @@ const RestaurantCard: React.FC<RestaurantCardProps> = ({ restaurant, onCardClick
             e.currentTarget.src = 'https://via.placeholder.com/400x300?text=' + encodeURIComponent(restaurant.name);
           }}
         />
-        {/* Heart Icon */}
-        <button
-          onClick={(e) => {
-            e.stopPropagation();
-            // Handle favorite logic here
-          }}
-          className="absolute top-3 right-3 p-2 bg-white/90 backdrop-blur-sm rounded-full hover:bg-white transition-colors shadow-md"
-          aria-label="Add to favorites"
-        >
-          <Heart className="h-5 w-5 text-gray-600 hover:text-red-500" />
-        </button>
       </div>
 
       {/* Content */}

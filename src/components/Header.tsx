@@ -23,11 +23,11 @@ const Header: React.FC<HeaderProps> = ({ cartItemsCount, onCartClick, onMenuClic
               <div className="w-10 h-10 bg-gray-200 rounded-full animate-pulse" />
             ) : (
               <img 
-                src={siteSettings?.site_logo || "/logo.jpg"} 
+                src={siteSettings?.site_logo || "/erun.jpg"} 
                 alt={siteSettings?.site_name || "E-Run Calinan Delivery"}
                 className="w-10 h-10 rounded object-cover ring-2 ring-green-primary"
                 onError={(e) => {
-                  e.currentTarget.src = "/logo.jpg";
+                  e.currentTarget.src = "/erun.jpg";
                 }}
               />
             )}

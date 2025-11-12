@@ -1,9 +1,10 @@
 // src/components/RestaurantManager.tsx
 import React, { useState } from 'react';
-import { ArrowLeft, Plus, Edit, Trash2, Save, X, Image as ImageIcon } from 'lucide-react';
+import { ArrowLeft, Plus, Edit, Trash2, Save, X, Image as ImageIcon, Utensils } from 'lucide-react';
 import { Restaurant } from '../types';
 import { useRestaurantsAdmin } from '../hooks/useRestaurantsAdmin';
 import ImageUpload from './ImageUpload';
+import RestaurantMenuManager from './RestaurantMenuManager';
 
 interface RestaurantManagerProps {
   onBack: () => void;
@@ -25,8 +26,9 @@ interface RestaurantFormData {
 
 const RestaurantManager: React.FC<RestaurantManagerProps> = ({ onBack }) => {
   const { restaurants, loading, addRestaurant, updateRestaurant, deleteRestaurant, refetch } = useRestaurantsAdmin();
-  const [currentView, setCurrentView] = useState<'list' | 'add' | 'edit'>('list');
+  const [currentView, setCurrentView] = useState<'list' | 'add' | 'edit' | 'menu'>('list');
   const [editingRestaurant, setEditingRestaurant] = useState<Restaurant | null>(null);
+  const [selectedRestaurant, setSelectedRestaurant] = useState<Restaurant | null>(null);
   const [formData, setFormData] = useState<RestaurantFormData>({
     name: '',
     type: 'Restaurant',
@@ -81,8 +83,8 @@ const RestaurantManager: React.FC<RestaurantManagerProps> = ({ onBack }) => {
   };
 
   const handleSave = async () => {
-    if (!formData.name?.trim() || !formData.image || !formData.deliveryTime) {
-      alert('Please fill in all required fields');
+    if (!formData.name?.trim() || !formData.image?.trim() || !formData.deliveryTime) {
+      alert('Please fill in all required fields (Name, Image, and Delivery Time)');
       return;
     }
 
@@ -90,8 +92,8 @@ const RestaurantManager: React.FC<RestaurantManagerProps> = ({ onBack }) => {
       const payload: Omit<Restaurant, 'id' | 'created_at' | 'updated_at'> = {
         name: formData.name.trim(),
         type: formData.type,
-        image: formData.image,
-        logo: formData.logo || undefined,
+        image: formData.image.trim(),
+        logo: formData.logo && formData.logo.trim() !== '' ? formData.logo.trim() : undefined,
         rating: Number(formData.rating),
         reviewCount: Number(formData.reviewCount),
         deliveryTime: formData.deliveryTime,
@@ -117,6 +119,7 @@ const RestaurantManager: React.FC<RestaurantManagerProps> = ({ onBack }) => {
   const handleCancel = () => {
     setCurrentView('list');
     setEditingRestaurant(null);
+    setSelectedRestaurant(null);
   };
 
   const handleDelete = async (id: string) => {
@@ -129,6 +132,27 @@ const RestaurantManager: React.FC<RestaurantManagerProps> = ({ onBack }) => {
       }
     }
   };
+
+  const handleManageMenu = (restaurant: Restaurant) => {
+    setSelectedRestaurant(restaurant);
+    setCurrentView('menu');
+  };
+
+  const handleBackFromMenu = () => {
+    setSelectedRestaurant(null);
+    setCurrentView('list');
+  };
+
+  // Menu Management View
+  if (currentView === 'menu' && selectedRestaurant) {
+    return (
+      <RestaurantMenuManager
+        restaurantId={selectedRestaurant.id}
+        restaurantName={selectedRestaurant.name}
+        onBack={handleBackFromMenu}
+      />
+    );
+  }
 
   if (loading) {
     return (
@@ -288,16 +312,26 @@ const RestaurantManager: React.FC<RestaurantManagerProps> = ({ onBack }) => {
             <div className="mb-8">
               <label className="block text-sm font-medium text-black mb-2">Restaurant Image *</label>
               <ImageUpload
-                currentImage={formData.image}
-                onImageChange={(imageUrl) => setFormData({ ...formData, image: imageUrl || '' })}
+                currentImage={formData.image || undefined}
+                onImageChange={(imageUrl) => {
+                  setFormData({ 
+                    ...formData, 
+                    image: imageUrl && imageUrl.trim() !== '' ? imageUrl.trim() : '' 
+                  });
+                }}
               />
             </div>
 
             <div className="mb-8">
               <label className="block text-sm font-medium text-black mb-2">Logo (Optional)</label>
               <ImageUpload
-                currentImage={formData.logo}
-                onImageChange={(imageUrl) => setFormData({ ...formData, logo: imageUrl || '' })}
+                currentImage={formData.logo || undefined}
+                onImageChange={(imageUrl) => {
+                  setFormData({ 
+                    ...formData, 
+                    logo: imageUrl && imageUrl.trim() !== '' ? imageUrl.trim() : '' 
+                  });
+                }}
               />
             </div>
           </div>
@@ -359,21 +393,30 @@ const RestaurantManager: React.FC<RestaurantManagerProps> = ({ onBack }) => {
                   <span>Delivery: {restaurant.deliveryTime}</span>
                   <span>Fee: ₱{restaurant.deliveryFee}</span>
                 </div>
-                <div className="flex items-center space-x-2">
+                <div className="flex flex-col space-y-2">
                   <button
-                    onClick={() => handleEdit(restaurant)}
-                    className="flex-1 flex items-center justify-center space-x-2 px-3 py-2 border border-gray-300 rounded-lg hover:bg-gray-50"
+                    onClick={() => handleManageMenu(restaurant)}
+                    className="w-full flex items-center justify-center space-x-2 px-3 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors duration-200"
                   >
-                    <Edit className="h-4 w-4" />
-                    <span>Edit</span>
+                    <Utensils className="h-4 w-4" />
+                    <span>Manage Menu</span>
                   </button>
-                  <button
-                    onClick={() => handleDelete(restaurant.id)}
-                    className="flex-1 flex items-center justify-center space-x-2 px-3 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700"
-                  >
-                    <Trash2 className="h-4 w-4" />
-                    <span>Delete</span>
-                  </button>
+                  <div className="flex items-center space-x-2">
+                    <button
+                      onClick={() => handleEdit(restaurant)}
+                      className="flex-1 flex items-center justify-center space-x-2 px-3 py-2 border border-gray-300 rounded-lg hover:bg-gray-50"
+                    >
+                      <Edit className="h-4 w-4" />
+                      <span>Edit</span>
+                    </button>
+                    <button
+                      onClick={() => handleDelete(restaurant.id)}
+                      className="flex-1 flex items-center justify-center space-x-2 px-3 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700"
+                    >
+                      <Trash2 className="h-4 w-4" />
+                      <span>Delete</span>
+                    </button>
+                  </div>
                 </div>
               </div>
             </div>

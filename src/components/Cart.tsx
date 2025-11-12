@@ -50,7 +50,6 @@ const Cart: React.FC<CartProps> = ({
           <span>Continue Shopping</span>
         </button>
         <h1 className="text-3xl font-playfair font-semibold text-black">Your Cart</h1>
-        <h1 className="text-3xl font-noto font-semibold text-black">Your Cart</h1>
         <button
           onClick={clearCart}
           className="text-red-500 hover:text-red-600 transition-colors duration-200 text-sm font-medium"
@@ -116,7 +115,7 @@ const Cart: React.FC<CartProps> = ({
       <div className="bg-white rounded-xl shadow-sm p-6">
         <div className="flex items-center justify-between text-2xl font-noto font-semibold text-black mb-6">
           <span>Total:</span>
-          <span>₱{parseFloat(getTotalPrice() || 0).toFixed(2)}</span>
+          <span>₱{parseFloat(getTotalPrice().toString()).toFixed(2)}</span>
         </div>
         
         <button

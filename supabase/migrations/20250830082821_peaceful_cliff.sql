@@ -22,6 +22,12 @@ VALUES (
   ARRAY['image/jpeg', 'image/png', 'image/webp', 'image/gif']
 ) ON CONFLICT (id) DO NOTHING;
 
+-- Drop existing policies if they exist
+DROP POLICY IF EXISTS "Public read access for menu images" ON storage.objects;
+DROP POLICY IF EXISTS "Authenticated users can upload menu images" ON storage.objects;
+DROP POLICY IF EXISTS "Authenticated users can update menu images" ON storage.objects;
+DROP POLICY IF EXISTS "Authenticated users can delete menu images" ON storage.objects;
+
 -- Allow public read access to menu images
 CREATE POLICY "Public read access for menu images"
 ON storage.objects
