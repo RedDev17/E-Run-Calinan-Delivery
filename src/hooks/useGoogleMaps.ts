@@ -1,4 +1,4 @@
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useEffect } from 'react';
 
 // Restaurant location: Calinan, Davao City
 const RESTAURANT_LOCATION = {
@@ -6,14 +6,15 @@ const RESTAURANT_LOCATION = {
   lng: 125.3764 // Calinan, Davao City longitude
 };
 
-// Delivery area center: Villafuerte st, Calinan, Davao City
-// Approximate coordinates for Villafuerte st area
-const DELIVERY_AREA_CENTER = {
-  lat: 7.2906, // Villafuerte st, Calinan, Davao City latitude (approximate)
-  lng: 125.3764 // Villafuerte st, Calinan, Davao City longitude (approximate)
+// Delivery center: Villafuerte St, Calinan District, Davao City, Davao del Sur
+// This is the point from which delivery distance is calculated
+const DELIVERY_CENTER = {
+  lat: 7.2906, // Villafuerte St, Calinan District, Davao City (approximate - will be geocoded)
+  lng: 125.3764, // Villafuerte St, Calinan District, Davao City (approximate - will be geocoded)
+  address: 'Villafuerte St, Calinan District, Davao City, Davao del Sur'
 };
 
-// Maximum delivery radius in kilometers (adjust as needed)
+// Maximum delivery radius in kilometers from delivery center (adjust as needed)
 const MAX_DELIVERY_RADIUS_KM = 100;
 
 interface DistanceResult {
@@ -24,6 +25,11 @@ interface DistanceResult {
 export const useGoogleMaps = () => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  // Use delivery center coordinates (will be geocoded, but start with default)
+  const [deliveryCenterCoords, setDeliveryCenterCoords] = useState<{ lat: number; lng: number }>({
+    lat: DELIVERY_CENTER.lat,
+    lng: DELIVERY_CENTER.lng
+  });
 
   // Calculate distance using Haversine formula (straight-line distance)
   const calculateDistanceHaversine = (lat1: number, lon1: number, lat2: number, lon2: number): number => {
@@ -104,6 +110,27 @@ export const useGoogleMaps = () => {
     }
   };
 
+  // Geocode delivery center address on first load
+  useEffect(() => {
+    const geocodeDeliveryCenter = async () => {
+      try {
+        // Try Google geocoding first
+        let coords = await geocodeAddressGoogle(DELIVERY_CENTER.address);
+        if (!coords) {
+          // Fallback to OpenStreetMap
+          coords = await geocodeAddressOSM(DELIVERY_CENTER.address);
+        }
+        if (coords) {
+          setDeliveryCenterCoords(coords);
+          console.log('Delivery center geocoded:', coords);
+        }
+      } catch (err) {
+        console.error('Error geocoding delivery center:', err);
+      }
+    };
+    geocodeDeliveryCenter();
+  }, []);
+
   // Calculate distance using Google Maps Distance Matrix API (if key is provided)
   const calculateDistanceGoogle = async (destinationAddress: string): Promise<DistanceResult | null> => {
     const apiKey = import.meta.env.VITE_GOOGLE_MAPS_API_KEY;
@@ -113,8 +140,9 @@ export const useGoogleMaps = () => {
     }
 
     try {
+      // Use delivery center coordinates for distance calculation
       const response = await fetch(
-        `https://maps.googleapis.com/maps/api/distancematrix/json?origins=${RESTAURANT_LOCATION.lat},${RESTAURANT_LOCATION.lng}&destinations=${encodeURIComponent(destinationAddress)}&key=${apiKey}&units=metric&region=ph`
+        `https://maps.googleapis.com/maps/api/distancematrix/json?origins=${deliveryCenterCoords.lat},${deliveryCenterCoords.lng}&destinations=${encodeURIComponent(destinationAddress)}&key=${apiKey}&units=metric&region=ph`
       );
       const data = await response.json();
       
@@ -135,7 +163,7 @@ export const useGoogleMaps = () => {
     return null;
   };
 
-  // Main distance calculation function - uses free services by default
+  // Main distance calculation function - calculates from delivery center to customer address
   const calculateDistance = useCallback(async (destinationAddress: string): Promise<DistanceResult | null> => {
     setLoading(true);
     setError(null);
@@ -156,9 +184,10 @@ export const useGoogleMaps = () => {
       }
 
       if (coords) {
+        // Calculate distance from delivery center to customer address
         const distance = calculateDistanceHaversine(
-          RESTAURANT_LOCATION.lat,
-          RESTAURANT_LOCATION.lng,
+          deliveryCenterCoords.lat,
+          deliveryCenterCoords.lng,
           coords.lat,
           coords.lng
         );
@@ -178,7 +207,7 @@ export const useGoogleMaps = () => {
       setLoading(false);
       return null;
     }
-  }, []);
+  }, [deliveryCenterCoords]);
 
   // Calculate delivery fee: 60 base + 15 for every 3km (or portion thereof)
   const calculateDeliveryFee = useCallback((distance: number | null): number => {
@@ -192,10 +221,10 @@ export const useGoogleMaps = () => {
     return baseFee + (kmBlocks * feePer3Km);
   }, []);
 
-  // Check if address is within delivery area (near Villafuerte st, Calinan, Davao City)
+  // Check if customer address is within delivery area (distance from restaurant)
   const isWithinDeliveryArea = useCallback(async (address: string): Promise<{ within: boolean; distance?: number; error?: string }> => {
     try {
-      // Get coordinates for the delivery address
+      // Get coordinates for the customer's delivery address
       let coords = await geocodeAddressGoogle(address);
       if (!coords) {
         coords = await geocodeAddressOSM(address);
@@ -205,10 +234,10 @@ export const useGoogleMaps = () => {
         return { within: false, error: 'Could not find the address location.' };
       }
 
-      // Calculate distance from delivery area center
+      // Calculate distance from delivery center to customer address
       const distanceFromCenter = calculateDistanceHaversine(
-        DELIVERY_AREA_CENTER.lat,
-        DELIVERY_AREA_CENTER.lng,
+        deliveryCenterCoords.lat,
+        deliveryCenterCoords.lng,
         coords.lat,
         coords.lng
       );
@@ -219,7 +248,7 @@ export const useGoogleMaps = () => {
       console.error('Delivery area check error:', err);
       return { within: false, error: 'Failed to check delivery area.' };
     }
-  }, []);
+  }, [deliveryCenterCoords]);
 
   return {
     calculateDistance,
@@ -228,7 +257,6 @@ export const useGoogleMaps = () => {
     loading,
     error,
     restaurantLocation: RESTAURANT_LOCATION,
-    deliveryAreaCenter: DELIVERY_AREA_CENTER,
     maxDeliveryRadius: MAX_DELIVERY_RADIUS_KM
   };
 };

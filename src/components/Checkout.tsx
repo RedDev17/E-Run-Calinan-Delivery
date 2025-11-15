@@ -13,7 +13,7 @@ interface CheckoutProps {
 
 const Checkout: React.FC<CheckoutProps> = ({ cartItems, totalPrice, onBack }) => {
   const { paymentMethods } = usePaymentMethods();
-  const { calculateDistance, calculateDeliveryFee, isWithinDeliveryArea, restaurantLocation, deliveryAreaCenter, maxDeliveryRadius } = useGoogleMaps();
+  const { calculateDistance, calculateDeliveryFee, isWithinDeliveryArea, restaurantLocation, maxDeliveryRadius } = useGoogleMaps();
   const [step, setStep] = useState<'details' | 'payment'>('details');
   const [customerName, setCustomerName] = useState('');
   const [contactNumber, setContactNumber] = useState('');
@@ -334,7 +334,7 @@ Please confirm this order to proceed. Thank you for choosing E-Run Calinan Deliv
                     className={`flex-1 px-4 py-3 border rounded-lg focus:ring-2 focus:ring-green-primary focus:border-transparent transition-all duration-200 ${
                       isWithinArea === false ? 'border-red-300 bg-red-50' : 'border-gray-300'
                     }`}
-                    placeholder="Enter your complete delivery address near Villafuerte st, Calinan, Davao City"
+                    placeholder="Enter your complete delivery address"
                     rows={3}
                     required
                   />
@@ -354,7 +354,7 @@ Please confirm this order to proceed. Thank you for choosing E-Run Calinan Deliv
                       ⚠️ Delivery not available to this address
                     </p>
                     <p className="text-xs text-red-600 mt-1">
-                      We only deliver to addresses near Villafuerte st, Calinan, Davao City (within {maxDeliveryRadius}km radius).
+                      We only deliver to addresses within {maxDeliveryRadius}km from our restaurant location.
                     </p>
                     {areaCheckError && (
                       <p className="text-xs text-red-500 mt-1">{areaCheckError}</p>
