@@ -79,7 +79,11 @@ const RestaurantMenu: React.FC<RestaurantMenuProps> = ({
             </h2>
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 md:gap-6">
               {items.map((item) => {
-                const cartItem = cartItems.find(cartItem => cartItem.id === item.id);
+                // Find cart item - it might have a unique ID if it has variations/add-ons
+                const cartItem = cartItems.find(cartItem => 
+                  cartItem.id.startsWith(item.id) && 
+                  cartItem.id.split('-')[0] === item.id
+                );
                 // Convert RestaurantMenuItem to MenuItem for MenuItemCard
                 const menuItem: MenuItem = {
                   id: item.id,
@@ -107,6 +111,7 @@ const RestaurantMenu: React.FC<RestaurantMenuProps> = ({
                     quantity={cartItem?.quantity || 0}
                     onUpdateQuantity={updateQuantity}
                     deliveryFee={restaurant.deliveryFee}
+                    cartItemId={cartItem?.id}
                   />
                 );
               })}

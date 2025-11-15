@@ -1,10 +1,20 @@
 import { useState, useCallback } from 'react';
 
-// Restaurant location: Calinan 8000 Davao City, Philippines
+// Restaurant location: Calinan, Davao City
 const RESTAURANT_LOCATION = {
-  lat: 7.2906, // Calinan 8000, Davao City latitude
-  lng: 125.3764 // Calinan 8000, Davao City longitude
+  lat: 7.2906, // Calinan, Davao City latitude
+  lng: 125.3764 // Calinan, Davao City longitude
 };
+
+// Delivery area center: Villafuerte st, Calinan, Davao City
+// Approximate coordinates for Villafuerte st area
+const DELIVERY_AREA_CENTER = {
+  lat: 7.2906, // Villafuerte st, Calinan, Davao City latitude (approximate)
+  lng: 125.3764 // Villafuerte st, Calinan, Davao City longitude (approximate)
+};
+
+// Maximum delivery radius in kilometers (adjust as needed)
+const MAX_DELIVERY_RADIUS_KM = 100;
 
 interface DistanceResult {
   distance: number; // in kilometers
@@ -170,22 +180,56 @@ export const useGoogleMaps = () => {
     }
   }, []);
 
-  // Calculate delivery fee: 60 base + 15 per kilometer
+  // Calculate delivery fee: 60 base + 15 for every 3km (or portion thereof)
   const calculateDeliveryFee = useCallback((distance: number | null): number => {
     if (distance === null || distance === undefined || isNaN(distance)) {
       return 60; // Base fee if distance cannot be calculated
     }
     const baseFee = 60;
-    const perKmFee = 15;
-    return baseFee + (distance * perKmFee);
+    const feePer3Km = 15;
+    // For every 3km (or portion), add ₱15
+    const kmBlocks = Math.ceil(distance / 3);
+    return baseFee + (kmBlocks * feePer3Km);
+  }, []);
+
+  // Check if address is within delivery area (near Villafuerte st, Calinan, Davao City)
+  const isWithinDeliveryArea = useCallback(async (address: string): Promise<{ within: boolean; distance?: number; error?: string }> => {
+    try {
+      // Get coordinates for the delivery address
+      let coords = await geocodeAddressGoogle(address);
+      if (!coords) {
+        coords = await geocodeAddressOSM(address);
+      }
+
+      if (!coords) {
+        return { within: false, error: 'Could not find the address location.' };
+      }
+
+      // Calculate distance from delivery area center
+      const distanceFromCenter = calculateDistanceHaversine(
+        DELIVERY_AREA_CENTER.lat,
+        DELIVERY_AREA_CENTER.lng,
+        coords.lat,
+        coords.lng
+      );
+
+      const within = distanceFromCenter <= MAX_DELIVERY_RADIUS_KM;
+      return { within, distance: Math.round(distanceFromCenter * 10) / 10 };
+    } catch (err) {
+      console.error('Delivery area check error:', err);
+      return { within: false, error: 'Failed to check delivery area.' };
+    }
   }, []);
 
   return {
     calculateDistance,
     calculateDeliveryFee,
+    isWithinDeliveryArea,
     loading,
     error,
-    restaurantLocation: RESTAURANT_LOCATION
+    restaurantLocation: RESTAURANT_LOCATION,
+    deliveryAreaCenter: DELIVERY_AREA_CENTER,
+    maxDeliveryRadius: MAX_DELIVERY_RADIUS_KM
   };
 };
 

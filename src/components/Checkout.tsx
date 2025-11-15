@@ -13,7 +13,7 @@ interface CheckoutProps {
 
 const Checkout: React.FC<CheckoutProps> = ({ cartItems, totalPrice, onBack }) => {
   const { paymentMethods } = usePaymentMethods();
-  const { calculateDistance, calculateDeliveryFee, restaurantLocation } = useGoogleMaps();
+  const { calculateDistance, calculateDeliveryFee, isWithinDeliveryArea, restaurantLocation, deliveryAreaCenter, maxDeliveryRadius } = useGoogleMaps();
   const [step, setStep] = useState<'details' | 'payment'>('details');
   const [customerName, setCustomerName] = useState('');
   const [contactNumber, setContactNumber] = useState('');
@@ -27,6 +27,9 @@ const Checkout: React.FC<CheckoutProps> = ({ cartItems, totalPrice, onBack }) =>
   const [isCalculatingDistance, setIsCalculatingDistance] = useState(false);
   const [customerLocation, setCustomerLocation] = useState<{ lat: number; lng: number } | null>(null);
   const [isGettingLocation, setIsGettingLocation] = useState(false);
+  // Delivery area validation
+  const [isWithinArea, setIsWithinArea] = useState<boolean | null>(null);
+  const [areaCheckError, setAreaCheckError] = useState<string | null>(null);
 
   React.useEffect(() => {
     window.scrollTo({ top: 0, behavior: 'smooth' });
@@ -37,7 +40,7 @@ const Checkout: React.FC<CheckoutProps> = ({ cartItems, totalPrice, onBack }) =>
     if (paymentMethods.length > 0 && !paymentMethod) {
       setPaymentMethod(paymentMethods[0].id as PaymentMethod);
     }
-  }, [paymentMethods, paymentMethod]);
+  }, [paymentMethods]);
 
   // Get customer's current location using browser geolocation
   const getCurrentLocation = () => {
@@ -93,11 +96,27 @@ const Checkout: React.FC<CheckoutProps> = ({ cartItems, totalPrice, onBack }) =>
     if (address.trim()) {
       const timeoutId = setTimeout(async () => {
         setIsCalculatingDistance(true);
-        const result = await calculateDistance(address);
-        if (result) {
-          setDistance(result.distance);
-          const fee = calculateDeliveryFee(result.distance);
-          setDeliveryFee(fee);
+        setAreaCheckError(null);
+        
+        // First check if address is within delivery area
+        const areaCheck = await isWithinDeliveryArea(address);
+        setIsWithinArea(areaCheck.within);
+        
+        if (areaCheck.error) {
+          setAreaCheckError(areaCheck.error);
+        }
+        
+        // Only calculate distance and fee if address is within delivery area
+        if (areaCheck.within) {
+          const result = await calculateDistance(address);
+          if (result) {
+            setDistance(result.distance);
+            const fee = calculateDeliveryFee(result.distance);
+            setDeliveryFee(fee);
+          } else {
+            setDistance(null);
+            setDeliveryFee(60);
+          }
           
           // Get coordinates for the address to show on map
           try {
@@ -124,9 +143,10 @@ const Checkout: React.FC<CheckoutProps> = ({ cartItems, totalPrice, onBack }) =>
             console.error('Geocoding error:', err);
           }
         } else {
-          // If distance calculation fails, use base fee
+          // Address is outside delivery area
           setDistance(null);
-          setDeliveryFee(60);
+          setDeliveryFee(0);
+          setCustomerLocation(null);
         }
         setIsCalculatingDistance(false);
       }, 1000); // Debounce for 1 second
@@ -136,8 +156,10 @@ const Checkout: React.FC<CheckoutProps> = ({ cartItems, totalPrice, onBack }) =>
       setDistance(null);
       setDeliveryFee(60);
       setCustomerLocation(null);
+      setIsWithinArea(null);
+      setAreaCheckError(null);
     }
-  }, [address, calculateDistance, calculateDeliveryFee]);
+  }, [address, calculateDistance, calculateDeliveryFee, isWithinDeliveryArea]);
 
   // Calculate total price including delivery fee
   const finalTotalPrice = React.useMemo(() => {
@@ -195,7 +217,7 @@ Please confirm this order to proceed. Thank you for choosing E-Run Calinan Deliv
     window.open(messengerUrl, '_blank');
   };
 
-  const isDetailsValid = customerName && contactNumber && address;
+  const isDetailsValid = customerName && contactNumber && address && isWithinArea === true;
 
   if (step === 'details') {
     return (
@@ -296,18 +318,23 @@ Please confirm this order to proceed. Thank you for choosing E-Run Calinan Deliv
                 <label className="block text-sm font-medium text-black mb-2">
                   Delivery Address *
                   {isCalculatingDistance && (
-                    <span className="ml-2 text-xs text-gray-500">Calculating distance...</span>
+                    <span className="ml-2 text-xs text-gray-500">Checking delivery area...</span>
                   )}
-                  {distance !== null && !isCalculatingDistance && (
-                    <span className="ml-2 text-xs text-green-600">Distance: {distance} km</span>
+                  {isWithinArea === true && distance !== null && !isCalculatingDistance && (
+                    <span className="ml-2 text-xs text-green-600">✓ Within area • Distance: {distance} km</span>
+                  )}
+                  {isWithinArea === false && !isCalculatingDistance && (
+                    <span className="ml-2 text-xs text-red-600">✗ Outside delivery area</span>
                   )}
                 </label>
                 <div className="flex gap-2 mb-2">
                   <textarea
                     value={address}
                     onChange={(e) => setAddress(e.target.value)}
-                    className="flex-1 px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-primary focus:border-transparent transition-all duration-200"
-                    placeholder="Enter your complete delivery address (e.g., Street, Barangay, City)"
+                    className={`flex-1 px-4 py-3 border rounded-lg focus:ring-2 focus:ring-green-primary focus:border-transparent transition-all duration-200 ${
+                      isWithinArea === false ? 'border-red-300 bg-red-50' : 'border-gray-300'
+                    }`}
+                    placeholder="Enter your complete delivery address near Villafuerte st, Calinan, Davao City"
                     rows={3}
                     required
                   />
@@ -321,9 +348,24 @@ Please confirm this order to proceed. Thank you for choosing E-Run Calinan Deliv
                     <Navigation className={`h-5 w-5 ${isGettingLocation ? 'animate-spin' : ''}`} />
                   </button>
                 </div>
-                <p className="text-xs text-gray-500 mb-3">
-                  Delivery fee: ₱60 base + ₱15 per kilometer
-                </p>
+                {isWithinArea === false && !isCalculatingDistance && (
+                  <div className="mb-3 p-3 bg-red-50 border border-red-200 rounded-lg">
+                    <p className="text-sm text-red-800 font-medium">
+                      ⚠️ Delivery not available to this address
+                    </p>
+                    <p className="text-xs text-red-600 mt-1">
+                      We only deliver to addresses near Villafuerte st, Calinan, Davao City (within {maxDeliveryRadius}km radius).
+                    </p>
+                    {areaCheckError && (
+                      <p className="text-xs text-red-500 mt-1">{areaCheckError}</p>
+                    )}
+                  </div>
+                )}
+                {isWithinArea === true && (
+                  <p className="text-xs text-gray-500 mb-3">
+                    Delivery fee: ₱60 base + ₱15 for every 3km
+                  </p>
+                )}
                 
                 {/* Map Display */}
                 {(customerLocation || address) && (

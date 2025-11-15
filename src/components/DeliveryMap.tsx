@@ -1,7 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { MapContainer, TileLayer, Marker, Popup, Polyline, useMap } from 'react-leaflet';
 import L from 'leaflet';
-import { MapPin } from 'lucide-react';
 
 // Fix for default marker icons in Leaflet with React
 import icon from 'leaflet/dist/images/marker-icon.png';
@@ -142,7 +141,7 @@ const DeliveryMap: React.FC<DeliveryMapProps> = ({
           <Popup>
             <div className="text-center">
               <p className="font-semibold text-green-600">🛵 E-Run Calinan Delivery</p>
-              <p className="text-xs text-gray-600 mt-1">Calinan 8000 Davao City, Philippines</p>
+              <p className="text-xs text-gray-600 mt-1">Calinan, Davao City</p>
             </div>
           </Popup>
         </Marker>
@@ -164,13 +163,13 @@ const DeliveryMap: React.FC<DeliveryMapProps> = ({
               </Popup>
             </Marker>
 
-            {/* Line connecting restaurant and customer */}
+            {/* Route line connecting restaurant and customer */}
             <Polyline
               positions={path}
               color="#22c55e"
-              weight={4}
-              opacity={0.7}
-              dashArray="10, 10"
+              weight={5}
+              opacity={0.8}
+              dashArray="15, 10"
             />
           </>
         )}

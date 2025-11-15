@@ -79,7 +79,11 @@ const Menu: React.FC<MenuProps> = ({ menuItems, addToCart, cartItems, updateQuan
                 </div>
                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 md:gap-6">
                   {menuItems.map((item) => {
-                    const cartItem = cartItems.find(cartItem => cartItem.id === item.id);
+                    // Find cart item - it might have a unique ID if it has variations/add-ons
+                    const cartItem = cartItems.find(cartItem => 
+                      cartItem.id.startsWith(item.id) && 
+                      cartItem.id.split('-')[0] === item.id
+                    );
                     return (
                       <MenuItemCard
                         key={item.id}
@@ -87,6 +91,7 @@ const Menu: React.FC<MenuProps> = ({ menuItems, addToCart, cartItems, updateQuan
                         onAddToCart={addToCart}
                         quantity={cartItem?.quantity || 0}
                         onUpdateQuantity={updateQuantity}
+                        cartItemId={cartItem?.id}
                       />
                     );
                   })}
@@ -129,7 +134,11 @@ const Menu: React.FC<MenuProps> = ({ menuItems, addToCart, cartItems, updateQuan
                 </div>
                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 md:gap-6">
                   {menuItems.map((item) => {
-                    const cartItem = cartItems.find(cartItem => cartItem.id === item.id);
+                    // Find cart item - it might have a unique ID if it has variations/add-ons
+                    const cartItem = cartItems.find(cartItem => 
+                      cartItem.id.startsWith(item.id) && 
+                      cartItem.id.split('-')[0] === item.id
+                    );
                     return (
                       <MenuItemCard
                         key={item.id}
@@ -137,6 +146,7 @@ const Menu: React.FC<MenuProps> = ({ menuItems, addToCart, cartItems, updateQuan
                         onAddToCart={addToCart}
                         quantity={cartItem?.quantity || 0}
                         onUpdateQuantity={updateQuantity}
+                        cartItemId={cartItem?.id}
                       />
                     );
                   })}
@@ -160,7 +170,11 @@ const Menu: React.FC<MenuProps> = ({ menuItems, addToCart, cartItems, updateQuan
                 
                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 md:gap-6">
                   {categoryItems.map((item) => {
-                    const cartItem = cartItems.find(cartItem => cartItem.id === item.id);
+                    // Find cart item - it might have a unique ID if it has variations/add-ons
+                    const cartItem = cartItems.find(cartItem => 
+                      cartItem.id.startsWith(item.id) && 
+                      cartItem.id.split('-')[0] === item.id
+                    );
                     return (
                       <MenuItemCard
                         key={item.id}
@@ -168,6 +182,7 @@ const Menu: React.FC<MenuProps> = ({ menuItems, addToCart, cartItems, updateQuan
                         onAddToCart={addToCart}
                         quantity={cartItem?.quantity || 0}
                         onUpdateQuantity={updateQuantity}
+                        cartItemId={cartItem?.id}
                       />
                     );
                   })}

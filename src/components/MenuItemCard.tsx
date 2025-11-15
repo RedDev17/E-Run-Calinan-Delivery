@@ -8,6 +8,7 @@ interface MenuItemCardProps {
   quantity: number;
   onUpdateQuantity: (id: string, quantity: number) => void;
   deliveryFee?: number; // Restaurant delivery fee
+  cartItemId?: string; // The actual cart item ID (may differ from item.id if variations/add-ons exist)
 }
 
 const MenuItemCard: React.FC<MenuItemCardProps> = ({ 
@@ -15,7 +16,8 @@ const MenuItemCard: React.FC<MenuItemCardProps> = ({
   onAddToCart, 
   quantity, 
   onUpdateQuantity,
-  deliveryFee = 0
+  deliveryFee = 0,
+  cartItemId
 }) => {
   const [showCustomization, setShowCustomization] = useState(false);
   const [selectedVariation, setSelectedVariation] = useState<Variation | undefined>(
@@ -24,9 +26,12 @@ const MenuItemCard: React.FC<MenuItemCardProps> = ({
   const [selectedAddOns, setSelectedAddOns] = useState<(AddOn & { quantity: number })[]>([]);
 
   const calculatePrice = () => {
-    // Use effective price (discounted or regular) as base
-    // Variations don't change the price - they're just customization options
-    let price = item.effectivePrice || item.basePrice;
+    // If a variation is selected, use ONLY the variation price (it replaces the base price)
+    let price = selectedVariation 
+      ? selectedVariation.price
+      : (item.effectivePrice || item.basePrice);
+    
+    // Add add-ons prices
     selectedAddOns.forEach(addOn => {
       price += addOn.price * addOn.quantity;
     });
@@ -52,12 +57,16 @@ const MenuItemCard: React.FC<MenuItemCardProps> = ({
   };
 
   const handleIncrement = () => {
-    onUpdateQuantity(item.id, quantity + 1);
+    // Use provided cartItemId or fallback to item.id
+    const idToUse = cartItemId || item.id;
+    onUpdateQuantity(idToUse, quantity + 1);
   };
 
   const handleDecrement = () => {
     if (quantity > 0) {
-      onUpdateQuantity(item.id, quantity - 1);
+      // Use provided cartItemId or fallback to item.id
+      const idToUse = cartItemId || item.id;
+      onUpdateQuantity(idToUse, quantity - 1);
     }
   };
 
@@ -271,11 +280,9 @@ const MenuItemCard: React.FC<MenuItemCardProps> = ({
                           />
                           <span className="font-medium text-gray-900">{variation.name}</span>
                         </div>
-                        {deliveryFee > 0 ? (
-                          <span className="text-sm font-medium text-gray-700">
-                            ₱{deliveryFee.toFixed(2)}
-                          </span>
-                        ) : null}
+                        <span className="text-sm font-medium text-gray-700">
+                          ₱{variation.price.toFixed(2)}
+                        </span>
                       </label>
                     ))}
                   </div>

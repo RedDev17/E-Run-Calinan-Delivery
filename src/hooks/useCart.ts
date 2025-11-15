@@ -6,9 +6,12 @@ export const useCart = () => {
   const [isCartOpen, setIsCartOpen] = useState(false);
 
   const calculateItemPrice = (item: MenuItem, variation?: Variation, addOns?: AddOn[]) => {
-    // Variations are free customization options (like "solo", "with drink", etc.)
-    // They don't affect the price - only add-ons do
-    let price = item.effectivePrice || item.basePrice;
+    // If variation is selected, use ONLY the variation price (it replaces the base price)
+    let price = variation 
+      ? variation.price
+      : (item.effectivePrice || item.basePrice);
+    
+    // Add add-ons prices
     if (addOns) {
       addOns.forEach(addOn => {
         price += addOn.price;
@@ -58,6 +61,10 @@ export const useCart = () => {
     });
   }, []);
 
+  const removeFromCart = useCallback((id: string) => {
+    setCartItems(prev => prev.filter(item => item.id !== id));
+  }, []);
+
   const updateQuantity = useCallback((id: string, quantity: number) => {
     if (quantity <= 0) {
       removeFromCart(id);
@@ -69,11 +76,7 @@ export const useCart = () => {
         item.id === id ? { ...item, quantity } : item
       )
     );
-  }, []);
-
-  const removeFromCart = useCallback((id: string) => {
-    setCartItems(prev => prev.filter(item => item.id !== id));
-  }, []);
+  }, [removeFromCart]);
 
   const clearCart = useCallback(() => {
     setCartItems([]);

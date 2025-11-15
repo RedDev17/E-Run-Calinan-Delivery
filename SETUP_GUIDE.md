@@ -4,8 +4,8 @@
 
 ### 1. Delivery Fee Calculation
 - **Base Fee**: ₱60
-- **Per Kilometer**: ₱15
-- **Total Delivery Fee**: ₱60 + (distance in km × ₱15)
+- **Per 3km Block**: ₱15 (for every 3km or portion thereof)
+- **Total Delivery Fee**: ₱60 + (₱15 × number of 3km blocks)
 
 The system automatically calculates the delivery fee based on the distance from the restaurant to the delivery address using Google Maps.
 
@@ -95,7 +95,7 @@ Ensure the `menu-images` storage bucket exists:
 3. System automatically:
    - Geocodes the address to get coordinates
    - Calculates distance from restaurant (Calinan, Davao City)
-   - Computes delivery fee: ₱60 + (distance × ₱15)
+   - Computes delivery fee: ₱60 + (₱15 × number of 3km blocks)
    - Displays the fee in real-time
 
 ### Image Upload
