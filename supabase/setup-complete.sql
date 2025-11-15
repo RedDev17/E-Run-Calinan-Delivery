@@ -309,13 +309,13 @@ ON CONFLICT (id) DO NOTHING;
 -- ============================================
 
 CREATE TABLE IF NOT EXISTS payment_methods (
-  id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+  id text PRIMARY KEY,
   name text NOT NULL,
   account_number text NOT NULL,
   account_name text NOT NULL,
   qr_code_url text NOT NULL,
   active boolean DEFAULT true,
-  sort_order integer DEFAULT 0,
+  sort_order integer NOT NULL DEFAULT 0,
   created_at timestamptz DEFAULT now(),
   updated_at timestamptz DEFAULT now()
 );

@@ -63,21 +63,71 @@ export const usePaymentMethods = () => {
 
   const addPaymentMethod = async (method: Omit<PaymentMethod, 'created_at' | 'updated_at'>) => {
     try {
+      // Check if ID already exists (only if ID is provided)
+      if (method.id) {
+        const { data: existing, error: checkError } = await supabase
+          .from('payment_methods')
+          .select('id')
+          .eq('id', method.id)
+          .maybeSingle();
+
+        if (checkError && checkError.code !== 'PGRST116') { // PGRST116 = no rows returned
+          throw checkError;
+        }
+
+        if (existing) {
+          throw new Error(`Payment method with ID "${method.id}" already exists. Please use a different ID.`);
+        }
+      }
+
+      // Prepare insert data - handle both UUID and text ID schemas
+      const insertData: any = {
+        name: method.name,
+        account_number: method.account_number,
+        account_name: method.account_name,
+        qr_code_url: method.qr_code_url || 'https://images.pexels.com/photos/8867482/pexels-photo-8867482.jpeg?auto=compress&cs=tinysrgb&w=300&h=300&fit=crop',
+        active: method.active ?? true,
+        sort_order: method.sort_order ?? 0
+      };
+
+      // Only include ID if it's provided (for text-based IDs)
+      // If database uses UUID, it will auto-generate
+      if (method.id) {
+        insertData.id = method.id;
+      }
+
       const { data, error: insertError } = await supabase
         .from('payment_methods')
-        .insert({
-          id: method.id,
-          name: method.name,
-          account_number: method.account_number,
-          account_name: method.account_name,
-          qr_code_url: method.qr_code_url,
-          active: method.active,
-          sort_order: method.sort_order
-        })
+        .insert(insertData)
         .select()
         .single();
 
-      if (insertError) throw insertError;
+      if (insertError) {
+        // Provide more helpful error messages
+        console.error('Insert error details:', {
+          code: insertError.code,
+          message: insertError.message,
+          details: insertError.details,
+          hint: insertError.hint
+        });
+        
+        if (insertError.code === '23505') {
+          throw new Error(`Payment method with ID "${method.id || 'this ID'}" already exists. Please use a different ID.`);
+        } else if (insertError.code === '42501') {
+          throw new Error('Permission denied. Please make sure you are logged in as an admin.');
+        } else if (insertError.code === 'PGRST116') {
+          throw new Error('No data returned. The payment method may not have been created.');
+        } else if (insertError.code === '42804' || insertError.message?.includes('uuid') || insertError.message?.includes('text')) {
+          throw new Error('Database schema mismatch. The payment_methods table may need to be updated. Please run the latest migration.');
+        } else {
+          const errorMsg = insertError.message || insertError.details || insertError.hint || `Error code: ${insertError.code || 'unknown'}`;
+          throw new Error(`Failed to add payment method: ${errorMsg}`);
+        }
+      }
+
+      if (!data) {
+        throw new Error('Payment method was not created. Please try again.');
+      }
 
       await fetchAllPaymentMethods();
       return data;

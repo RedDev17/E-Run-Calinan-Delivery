@@ -64,16 +64,31 @@ const PaymentMethodManager: React.FC<PaymentMethodManagerProps> = ({ onBack }) =
   };
 
   const handleSaveMethod = async () => {
-    if (!formData.id || !formData.name || !formData.account_number || !formData.account_name || !formData.qr_code_url) {
-      alert('Please fill in all required fields');
+    // Validate required fields
+    if (!formData.name || !formData.account_number || !formData.account_name) {
+      alert('Please fill in all required fields (Name, Account Number, Account Name)');
       return;
     }
 
-    // Validate ID format (kebab-case)
-    const idRegex = /^[a-z0-9]+(-[a-z0-9]+)*$/;
-    if (!idRegex.test(formData.id)) {
-      alert('Payment method ID must be in kebab-case format (e.g., "gcash", "bank-transfer")');
-      return;
+    // QR code is required but can be added later
+    if (!formData.qr_code_url) {
+      const proceed = confirm('QR Code image is not set. Do you want to continue without it? You can add it later.');
+      if (!proceed) {
+        return;
+      }
+    }
+
+    // Validate ID format (kebab-case) only for new items
+    if (currentView === 'add') {
+      if (!formData.id) {
+        alert('Please enter a Payment Method ID');
+        return;
+      }
+      const idRegex = /^[a-z0-9]+(-[a-z0-9]+)*$/;
+      if (!idRegex.test(formData.id)) {
+        alert('Payment method ID must be in kebab-case format (e.g., "gcash", "bank-transfer")');
+        return;
+      }
     }
 
     try {
@@ -84,8 +99,29 @@ const PaymentMethodManager: React.FC<PaymentMethodManagerProps> = ({ onBack }) =
       }
       setCurrentView('list');
       setEditingMethod(null);
+      // Reset form
+      setFormData({
+        id: '',
+        name: '',
+        account_number: '',
+        account_name: '',
+        qr_code_url: '',
+        active: true,
+        sort_order: 0
+      });
     } catch (error) {
-      alert(error instanceof Error ? error.message : 'Failed to save payment method');
+      console.error('Save payment method error:', error);
+      let errorMessage = 'Unknown error occurred';
+      
+      if (error instanceof Error) {
+        errorMessage = error.message;
+      } else if (typeof error === 'object' && error !== null) {
+        // Try to extract error message from error object
+        const err = error as any;
+        errorMessage = err.message || err.error?.message || err.details || JSON.stringify(error);
+      }
+      
+      alert(`Failed to save payment method: ${errorMessage}\n\nPlease check:\n- All required fields are filled\n- Payment Method ID is unique (if adding new)\n- You are logged in as admin\n- Database schema is correct (run migrations if needed)`);
     }
   };
 
