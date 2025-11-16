@@ -209,6 +209,80 @@ export const useGoogleMaps = () => {
     }
   }, [deliveryCenterCoords]);
 
+  // Calculate distance between two arbitrary addresses (e.g., Angkas/Padala pickup -> drop-off)
+  const calculateDistanceBetweenAddresses = useCallback(
+    async (pickupAddress: string, dropoffAddress: string): Promise<DistanceResult | null> => {
+      setLoading(true);
+      setError(null);
+
+      try {
+        const apiKey = import.meta.env.VITE_GOOGLE_MAPS_API_KEY;
+
+        // Try Google Distance Matrix API first if key is available
+        if (apiKey) {
+          try {
+            const response = await fetch(
+              `https://maps.googleapis.com/maps/api/distancematrix/json?origins=${encodeURIComponent(
+                pickupAddress
+              )}&destinations=${encodeURIComponent(dropoffAddress)}&key=${apiKey}&units=metric&region=ph`
+            );
+            const data = await response.json();
+
+            if (data.status === 'OK' && data.rows[0]?.elements[0]?.status === 'OK') {
+              const element = data.rows[0].elements[0];
+              const distanceInKm = element.distance.value / 1000;
+              const duration = element.duration.text;
+
+              const result: DistanceResult = {
+                distance: Math.round(distanceInKm * 10) / 10,
+                duration
+              };
+              setLoading(false);
+              return result;
+            }
+          } catch (err) {
+            console.warn('Google DistanceMatrix error (pickup->dropoff):', err);
+          }
+        }
+
+        // Fallback: geocode both addresses and use Haversine
+        let pickupCoords = await geocodeAddressGoogle(pickupAddress);
+        if (!pickupCoords) {
+          pickupCoords = await geocodeAddressOSM(pickupAddress);
+        }
+
+        let dropoffCoords = await geocodeAddressGoogle(dropoffAddress);
+        if (!dropoffCoords) {
+          dropoffCoords = await geocodeAddressOSM(dropoffAddress);
+        }
+
+        if (pickupCoords && dropoffCoords) {
+          const distance = calculateDistanceHaversine(
+            pickupCoords.lat,
+            pickupCoords.lng,
+            dropoffCoords.lat,
+            dropoffCoords.lng
+          );
+
+          setLoading(false);
+          return {
+            distance: Math.round(distance * 10) / 10
+          };
+        }
+
+        setError('Could not find pickup or drop-off address. Please enter complete addresses.');
+        setLoading(false);
+        return null;
+      } catch (err) {
+        console.error('Distance calculation error (pickup->dropoff):', err);
+        setError('Failed to calculate distance. Please try again.');
+        setLoading(false);
+        return null;
+      }
+    },
+    []
+  );
+
   // Calculate delivery fee: 60 base + 15 for every 3km (or portion thereof)
   const calculateDeliveryFee = useCallback((distance: number | null): number => {
     if (distance === null || distance === undefined || isNaN(distance)) {
@@ -252,6 +326,7 @@ export const useGoogleMaps = () => {
 
   return {
     calculateDistance,
+    calculateDistanceBetweenAddresses,
     calculateDeliveryFee,
     isWithinDeliveryArea,
     loading,

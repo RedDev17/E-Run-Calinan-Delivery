@@ -111,3 +111,57 @@ export interface RestaurantMenuItem {
   effectivePrice?: number;
   isOnDiscount?: boolean;
 }
+
+// Grocery Item (for Pabili service)
+export interface Grocery {
+  id: string;
+  name: string;
+  description: string;
+  price: number;
+  category: string;
+  image_url?: string;
+  unit: string; // e.g., 'piece', 'kg', 'pack', 'bottle'
+  available: boolean;
+  popular: boolean;
+  sort_order: number;
+  created_at: string;
+  updated_at: string;
+}
+
+// Padala Booking
+export interface PadalaBooking {
+  id: string;
+  customer_name: string;
+  contact_number: string;
+  pickup_address: string;
+  delivery_address: string;
+  item_description: string;
+  item_weight?: string;
+  item_value?: number;
+  special_instructions?: string;
+  preferred_date?: string;
+  preferred_time?: string;
+  status: 'pending' | 'confirmed' | 'in_transit' | 'delivered' | 'cancelled';
+  delivery_fee?: number;
+  distance_km?: number;
+  payment_method?: string;
+  reference_number?: string;
+  notes?: string;
+  created_at: string;
+  updated_at: string;
+}
+
+// Request
+export interface Request {
+  id: string;
+  customer_name: string;
+  contact_number: string;
+  request_type: string; // e.g., 'custom_order', 'special_request', 'complaint', 'suggestion'
+  subject: string;
+  description: string;
+  address?: string;
+  status: 'pending' | 'in_progress' | 'resolved' | 'cancelled';
+  admin_notes?: string;
+  created_at: string;
+  updated_at: string;
+}

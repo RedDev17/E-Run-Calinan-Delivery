@@ -34,12 +34,12 @@ export const useCart = () => {
       return groups;
     }, [] as (AddOn & { quantity: number })[]);
     
+    // Build a stable key based on base item id + variation + add-ons
+    const addOnKey = groupedAddOns?.map(a => `${a.id}-${a.quantity || 1}`).sort().join('|') || 'none';
+    const uniqueKey = `${item.id}-${variation?.id || 'default'}-${addOnKey}`;
+
     setCartItems(prev => {
-      const existingItem = prev.find(cartItem => 
-        cartItem.id === item.id && 
-        cartItem.selectedVariation?.id === variation?.id &&
-        JSON.stringify(cartItem.selectedAddOns?.map(a => `${a.id}-${a.quantity || 1}`).sort()) === JSON.stringify(groupedAddOns?.map(a => `${a.id}-${a.quantity}`).sort())
-      );
+      const existingItem = prev.find(cartItem => cartItem.id === uniqueKey);
       
       if (existingItem) {
         return prev.map(cartItem =>
@@ -48,10 +48,9 @@ export const useCart = () => {
             : cartItem
         );
       } else {
-        const uniqueId = `${item.id}-${variation?.id || 'default'}-${addOns?.map(a => a.id).join(',') || 'none'}`;
         return [...prev, { 
           ...item,
-          id: uniqueId,
+          id: uniqueKey,
           quantity,
           selectedVariation: variation,
           selectedAddOns: groupedAddOns || [],

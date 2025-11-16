@@ -349,7 +349,59 @@ CREATE TRIGGER update_payment_methods_updated_at
   EXECUTE FUNCTION update_updated_at_column();
 
 -- ============================================
--- 9. CREATE STORAGE BUCKET FOR IMAGES
+-- 9. CREATE GROCERIES TABLE (Pabili Service)
+-- ============================================
+
+CREATE TABLE IF NOT EXISTS groceries (
+  id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+  name text NOT NULL,
+  description text NOT NULL,
+  price decimal(10,2) NOT NULL,
+  category text NOT NULL,
+  image_url text,
+  unit text NOT NULL DEFAULT 'piece', -- e.g., 'piece', 'kg', 'pack', 'bottle', 'box'
+  available boolean DEFAULT true,
+  popular boolean DEFAULT false,
+  sort_order integer NOT NULL DEFAULT 0,
+  created_at timestamptz DEFAULT now(),
+  updated_at timestamptz DEFAULT now()
+);
+
+-- Enable RLS
+ALTER TABLE groceries ENABLE ROW LEVEL SECURITY;
+
+-- Drop existing policies
+DROP POLICY IF EXISTS "Anyone can read active groceries" ON groceries;
+DROP POLICY IF EXISTS "Authenticated users can manage groceries" ON groceries;
+
+-- Create policies
+CREATE POLICY "Anyone can read active groceries"
+  ON groceries
+  FOR SELECT
+  TO public
+  USING (available = true);
+
+CREATE POLICY "Authenticated users can manage groceries"
+  ON groceries
+  FOR ALL
+  TO authenticated
+  USING (true)
+  WITH CHECK (true);
+
+-- Create indexes
+CREATE INDEX IF NOT EXISTS idx_groceries_category ON groceries(category);
+CREATE INDEX IF NOT EXISTS idx_groceries_available ON groceries(available);
+CREATE INDEX IF NOT EXISTS idx_groceries_sort_order ON groceries(sort_order);
+
+-- Create trigger
+DROP TRIGGER IF EXISTS update_groceries_updated_at ON groceries;
+CREATE TRIGGER update_groceries_updated_at
+  BEFORE UPDATE ON groceries
+  FOR EACH ROW
+  EXECUTE FUNCTION update_updated_at_column();
+
+-- ============================================
+-- 10. CREATE STORAGE BUCKET FOR IMAGES
 -- ============================================
 
 -- Create storage bucket for menu images
@@ -366,7 +418,7 @@ VALUES (
   allowed_mime_types = ARRAY['image/jpeg', 'image/png', 'image/webp', 'image/gif'];
 
 -- ============================================
--- 10. CREATE STORAGE POLICIES
+-- 11. CREATE STORAGE POLICIES
 -- ============================================
 
 -- Drop existing policies
@@ -404,7 +456,7 @@ TO authenticated
 USING (bucket_id = 'menu-images');
 
 -- ============================================
--- 11. INSERT SAMPLE CATEGORIES
+-- 12. INSERT SAMPLE CATEGORIES
 -- ============================================
 
 INSERT INTO categories (id, name, icon, sort_order, active) VALUES
