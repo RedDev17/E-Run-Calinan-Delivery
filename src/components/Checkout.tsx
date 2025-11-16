@@ -361,11 +361,7 @@ Please confirm this order to proceed. Thank you for choosing E-Run Calinan Deliv
                     )}
                   </div>
                 )}
-                {isWithinArea === true && (
-                  <p className="text-xs text-gray-500 mb-3">
-                    Delivery fee: ₱60 base + ₱15 for every 3km
-                  </p>
-                )}
+                
                 
                 {/* Map Display */}
                 {(customerLocation || address) && (
