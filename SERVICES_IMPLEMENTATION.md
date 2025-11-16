@@ -16,7 +16,7 @@
 - **Tables Created**:
   1. **groceries** - For Pabili service
      - id, name, description, price, category, image_url, unit, available, popular, sort_order
-  2. **padala_bookings** - For Padala/Angkas service
+  2. **padala_bookings** - For Angkas 
      - id, customer_name, contact_number, pickup_address, delivery_address, item_description, item_weight, item_value, special_instructions, preferred_date, preferred_time, status, delivery_fee, distance_km, payment_method, reference_number, notes
   3. **requests** - For customer requests
      - id, customer_name, contact_number, request_type, subject, description, address, status, admin_notes

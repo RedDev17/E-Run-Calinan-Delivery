@@ -27,9 +27,7 @@ const Requests: React.FC<RequestsProps> = ({ onBack }) => {
   const [isCalculating, setIsCalculating] = useState(false);
 
   const requestTypes = [
-    { value: 'angkas', label: 'Angkas (Motorcycle Ride)' },
-    { value: 'padala', label: 'Padala (Delivery Service)' },
-    { value: 'special_request', label: 'Special Request' }
+    { value: 'angkas', label: 'Angkas (Motorcycle Ride)' }
   ];
 
   // Angkas/Padala handlers
@@ -58,7 +56,7 @@ const Requests: React.FC<RequestsProps> = ({ onBack }) => {
         setDeliveryFee(60);
       }
     } catch (error) {
-      console.error('Error calculating Angkas/Padala fee:', error);
+      console.error('Error calculating Angkas fee:', error);
       setDistance(null);
       setDeliveryFee(60);
     } finally {
@@ -162,8 +160,7 @@ Thank you for your Angkas/Padala request. We will get back to you soon! 🛵`;
             <span>Back to Services</span>
           </button>
           <h1 className="mt-4 text-2xl sm:text-3xl font-bold text-black flex items-center gap-2 text-center">
-            <FileText className="h-7 w-7 sm:h-8 sm:w-8" />
-            Requests - Angkas/Padala
+            🛵 Angkas
           </h1>
         </div>
 
@@ -221,7 +218,7 @@ Thank you for your Angkas/Padala request. We will get back to you soon! 🛵`;
               onChange={handleAngkasInputChange}
               required
               className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-primary focus:border-transparent"
-              placeholder="Brief summary of your request (e.g., Need Angkas ride, Padala service)"
+              placeholder="Brief summary of your request (e.g., Need Angkas ride)"
             />
           </div>
 
@@ -234,7 +231,7 @@ Thank you for your Angkas/Padala request. We will get back to you soon! 🛵`;
               required
               rows={6}
               className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-primary focus:border-transparent"
-              placeholder="Please provide detailed information about your Angkas/Padala request (pickup location, destination, time needed, etc.)"
+              placeholder="Please provide detailed information about your Angkas request (pickup location, destination, time needed, etc.)"
             />
           </div>
 
