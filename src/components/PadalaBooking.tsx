@@ -73,7 +73,7 @@ const PadalaBooking: React.FC<PadalaBookingProps> = ({ onBack, title = 'Padala',
       !formData.contact_number ||
       !formData.pickup_address ||
       !formData.delivery_address ||
-      (mode === 'full' && !formData.item_description)
+      !formData.item_description
     ) {
       alert('Please fill in all required fields');
       return;
@@ -88,7 +88,7 @@ const PadalaBooking: React.FC<PadalaBookingProps> = ({ onBack, title = 'Padala',
           contact_number: formData.contact_number,
           pickup_address: formData.pickup_address,
           delivery_address: formData.delivery_address,
-          item_description: mode === 'full' ? formData.item_description || null : null,
+          item_description: formData.item_description || null,
           item_weight: mode === 'full' && formData.item_weight ? formData.item_weight : null,
           item_value: mode === 'full' && formData.item_value ? parseFloat(formData.item_value) : null,
           special_instructions: formData.special_instructions || null,
@@ -116,7 +116,7 @@ ${formData.pickup_address}
 📍 Delivery Address:
 ${formData.delivery_address}
 
-${mode === 'full' && formData.item_description ? `📦 Package Details:\n${formData.item_description}\n` : ''}${
+${formData.item_description ? `📦 Item Details:\n${formData.item_description}\n` : ''}${
         mode === 'full' && formData.item_weight ? `Weight: ${formData.item_weight}\n` : ''
       }${
         mode === 'full' && formData.item_value ? `Declared Value: ₱${formData.item_value}\n` : ''
@@ -255,23 +255,23 @@ Please confirm this ${serviceLabel} booking. Thank you! 🛵`;
             </div>
           </div>
 
-          {/* Item Details (full mode only) */}
-          {mode === 'full' && (
-            <div>
-              <h2 className="text-xl font-semibold text-gray-900 mb-4">Item Details</h2>
-              <div className="space-y-4">
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">Item Description *</label>
-                  <textarea
-                    name="item_description"
-                    value={formData.item_description}
-                    onChange={handleInputChange}
-                    required={mode === 'full'}
-                    rows={3}
-                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-primary focus:border-transparent"
-                    placeholder="Describe what you're sending"
-                  />
-                </div>
+          {/* Item Details */}
+          <div>
+            <h2 className="text-xl font-semibold text-gray-900 mb-4">Item Details</h2>
+            <div className="space-y-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">Item Description *</label>
+                <textarea
+                  name="item_description"
+                  value={formData.item_description}
+                  onChange={handleInputChange}
+                  required
+                  rows={3}
+                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-primary focus:border-transparent"
+                  placeholder={mode === 'simple' ? 'What should we buy for you?' : 'Describe what you are sending'}
+                />
+              </div>
+              {mode === 'full' && (
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-2">Item Weight (optional)</label>
@@ -298,9 +298,9 @@ Please confirm this ${serviceLabel} booking. Thank you! 🛵`;
                     />
                   </div>
                 </div>
-              </div>
+              )}
             </div>
-          )}
+          </div>
 
           {/* Preferred Schedule (full mode only) */}
           {mode === 'full' && (
