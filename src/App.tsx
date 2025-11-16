@@ -1,5 +1,6 @@
 import React from 'react';
 import { BrowserRouter as Router, Routes, Route, useNavigate } from 'react-router-dom';
+import { ArrowLeft } from 'lucide-react';
 import { useCart } from './hooks/useCart';
 import Header from './components/Header';
 import Hero from './components/Hero';
@@ -71,6 +72,17 @@ function FoodService() {
         onCartClick={() => handleViewChange('cart')}
         onMenuClick={handleBackToServices}
       />
+
+      {/* Back to Services pill inside Food pages (top-left, absolute) */}
+      <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 ">
+        <button
+          onClick={handleBackToServices}
+          className="absolute z-10 left-0 top-0 inline-flex items-center space-x-2 px-4 py-2 rounded-full bg-green-primary text-white text-sm sm:text-base font-medium shadow hover:bg-green-dark transition-colors duration-200"
+        >
+          <ArrowLeft className="h-4 w-4" />
+          <span>Back to Services</span>
+        </button>
+      </div>
       
       {currentView === 'restaurants' && (
         <>
