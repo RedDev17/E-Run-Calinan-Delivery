@@ -112,7 +112,7 @@ const Pabili: React.FC<PabiliProps> = ({ onBack, cartItems, onAddToCart, updateQ
             <span>Back to Services</span>
           </button>
           <h1 className="mt-4 text-2xl sm:text-3xl font-bold text-black text-center">
-            🛒 Pabili - Grocery Items
+            🛒 Pabili
           </h1>
         </div>
 

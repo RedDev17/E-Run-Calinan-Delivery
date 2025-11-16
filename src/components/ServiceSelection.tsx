@@ -26,7 +26,7 @@ const ServiceSelection: React.FC<ServiceSelectionProps> = ({ onServiceSelect }) 
       id: 'padala' as const,
       name: 'Padala',
       icon: '📦',
-      description: 'Package delivery',
+      description: 'Padala',
       color: 'bg-purple-50 hover:bg-purple-100 border-purple-200',
       iconColor: 'text-purple-600'
     },
@@ -34,7 +34,7 @@ const ServiceSelection: React.FC<ServiceSelectionProps> = ({ onServiceSelect }) 
       id: 'requests' as const,
       name: 'Angkas',
       icon: '🛵',
-      description: 'Angkas / other requests',
+      description: 'Angkas',
       color: 'bg-green-50 hover:bg-green-100 border-green-200',
       iconColor: 'text-green-600'
     }
