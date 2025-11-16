@@ -24,7 +24,7 @@ const ServiceSelection: React.FC<ServiceSelectionProps> = ({ onServiceSelect }) 
     },
     {
       id: 'padala' as const,
-      name: 'Padala',
+      name: 'Package',
       icon: '📦',
       description: 'Package delivery',
       color: 'bg-purple-50 hover:bg-purple-100 border-purple-200',
