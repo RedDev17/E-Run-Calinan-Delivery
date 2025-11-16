@@ -1,10 +1,8 @@
 import React from 'react';
-import { BrowserRouter as Router, Routes, Route, useNavigate, useLocation } from 'react-router-dom';
+import { BrowserRouter as Router, Routes, Route, useNavigate } from 'react-router-dom';
 import { useCart } from './hooks/useCart';
 import Header from './components/Header';
 import Hero from './components/Hero';
-import SubNav from './components/SubNav';
-import Menu from './components/Menu';
 import Cart from './components/Cart';
 import Checkout from './components/Checkout';
 import FloatingCartButton from './components/FloatingCartButton';
@@ -12,10 +10,8 @@ import AdminDashboard from './components/AdminDashboard';
 import RestaurantList from './components/RestaurantList';
 import RestaurantMenu from './components/RestaurantMenu';
 import ServiceSelection from './components/ServiceSelection';
-import Pabili from './components/Pabili';
 import PadalaBooking from './components/PadalaBooking';
 import Requests from './components/Requests';
-import { useMenu } from './hooks/useMenu';
 import { useRestaurants } from './hooks/useRestaurants';
 import { Restaurant } from './types';
 
@@ -134,68 +130,12 @@ function FoodService() {
 
 function PabiliService() {
   const navigate = useNavigate();
-  const cart = useCart();
-  const [currentView, setCurrentView] = React.useState<'groceries' | 'cart' | 'checkout'>('groceries');
-
-  const handleViewChange = (view: 'groceries' | 'cart' | 'checkout') => {
-    setCurrentView(view);
-  };
-
-  const handleBackToServices = () => {
-    navigate('/');
-  };
-
-  return (
-    <div className="min-h-screen bg-offwhite font-inter">
-      <Header 
-        cartItemsCount={cart.getTotalItems()}
-        onCartClick={() => handleViewChange('cart')}
-        onMenuClick={handleBackToServices}
-      />
-      
-      {currentView === 'groceries' && (
-        <Pabili 
-          onBack={handleBackToServices}
-          cartItems={cart.cartItems}
-          onAddToCart={cart.addToCart}
-          updateQuantity={cart.updateQuantity}
-          onCartClick={() => handleViewChange('cart')}
-        />
-      )}
-      
-      {currentView === 'cart' && (
-        <Cart 
-          cartItems={cart.cartItems}
-          updateQuantity={cart.updateQuantity}
-          removeFromCart={cart.removeFromCart}
-          clearCart={cart.clearCart}
-          getTotalPrice={cart.getTotalPrice}
-          onContinueShopping={() => handleViewChange('groceries')}
-          onCheckout={() => handleViewChange('checkout')}
-        />
-      )}
-      
-      {currentView === 'checkout' && (
-        <Checkout 
-          cartItems={cart.cartItems}
-          totalPrice={cart.getTotalPrice()}
-          onBack={() => handleViewChange('cart')}
-        />
-      )}
-      
-      {currentView === 'groceries' && (
-        <FloatingCartButton 
-          itemCount={cart.getTotalItems()}
-          onCartClick={() => handleViewChange('cart')}
-        />
-      )}
-    </div>
-  );
+  return <PadalaBooking title="Pabili" mode="simple" onBack={() => navigate('/')} />;
 }
 
 function PadalaService() {
   const navigate = useNavigate();
-  return <PadalaBooking onBack={() => navigate('/')} />;
+  return <PadalaBooking title="Padala" mode="full" onBack={() => navigate('/')} />;
 }
 
 function RequestsService() {

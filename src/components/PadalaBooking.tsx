@@ -1,21 +1,29 @@
 import React, { useState } from 'react';
-import { ArrowLeft, Package, MapPin } from 'lucide-react';
+import { ArrowLeft, MapPin } from 'lucide-react';
 import { supabase } from '../lib/supabase';
 import { useGoogleMaps } from '../hooks/useGoogleMaps';
 import Header from './Header';
 
 interface PadalaBookingProps {
   onBack: () => void;
+  title?: string;
+  mode?: 'simple' | 'full';
 }
 
-const PadalaBooking: React.FC<PadalaBookingProps> = ({ onBack }) => {
+const PadalaBooking: React.FC<PadalaBookingProps> = ({ onBack, title = 'Padala', mode = 'full' }) => {
   const { calculateDistanceBetweenAddresses, calculateDeliveryFee } = useGoogleMaps();
   const [formData, setFormData] = useState({
     customer_name: '',
     contact_number: '',
     pickup_address: '',
     delivery_address: '',
-    special_instructions: ''
+    item_description: '',
+    item_weight: '',
+    item_value: '',
+    special_instructions: '',
+    preferred_date: '',
+    preferred_time: 'Morning',
+    notes: ''
   });
   const [distance, setDistance] = useState<number | null>(null);
   const [deliveryFee, setDeliveryFee] = useState<number>(60);
@@ -60,8 +68,13 @@ const PadalaBooking: React.FC<PadalaBookingProps> = ({ onBack }) => {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
-    if (!formData.customer_name || !formData.contact_number || !formData.pickup_address || 
-        !formData.delivery_address) {
+    if (
+      !formData.customer_name ||
+      !formData.contact_number ||
+      !formData.pickup_address ||
+      !formData.delivery_address ||
+      (mode === 'full' && !formData.item_description)
+    ) {
       alert('Please fill in all required fields');
       return;
     }
@@ -75,22 +88,24 @@ const PadalaBooking: React.FC<PadalaBookingProps> = ({ onBack }) => {
           contact_number: formData.contact_number,
           pickup_address: formData.pickup_address,
           delivery_address: formData.delivery_address,
-          item_description: null,
-          item_weight: null,
-          item_value: null,
+          item_description: mode === 'full' ? formData.item_description || null : null,
+          item_weight: mode === 'full' && formData.item_weight ? formData.item_weight : null,
+          item_value: mode === 'full' && formData.item_value ? parseFloat(formData.item_value) : null,
           special_instructions: formData.special_instructions || null,
-          preferred_date: null,
-          preferred_time: null,
+          preferred_date: mode === 'full' && formData.preferred_date ? formData.preferred_date : null,
+          preferred_time: mode === 'full' ? formData.preferred_time : null,
           delivery_fee: deliveryFee || null,
           distance_km: distance || null,
-          notes: null,
+          notes: mode === 'full' && formData.notes ? formData.notes : null,
           status: 'pending'
         });
 
       if (error) throw error;
 
       // Create Messenger message
-      const message = `📦 Padala
+      const headingEmoji = title === 'Pabili' ? '🛒' : '📦';
+      const serviceLabel = title === 'Pabili' ? 'Pabili' : 'Padala';
+      const message = `${headingEmoji} ${serviceLabel}
 
 👤 Customer: ${formData.customer_name}
 📞 Contact: ${formData.contact_number}
@@ -101,12 +116,20 @@ ${formData.pickup_address}
 📍 Delivery Address:
 ${formData.delivery_address}
 
+${mode === 'full' && formData.item_description ? `📦 Package Details:\n${formData.item_description}\n` : ''}${
+        mode === 'full' && formData.item_weight ? `Weight: ${formData.item_weight}\n` : ''
+      }${
+        mode === 'full' && formData.item_value ? `Declared Value: ₱${formData.item_value}\n` : ''
+      }
+${mode === 'full' ? `📅 Preferred Date: ${formData.preferred_date || 'Any'}\n⏰ Preferred Time: ${formData.preferred_time}\n` : ''}
 ${distance ? `📏 Distance: ${distance} km` : ''}
 💰 Delivery Fee: ₱${deliveryFee.toFixed(2)}
 
-${formData.special_instructions ? `📝 Special Instructions: ${formData.special_instructions}` : ''}
+${formData.special_instructions ? `📝 Special Instructions: ${formData.special_instructions}` : ''}${
+        mode === 'full' && formData.notes ? `\n📝 Notes: ${formData.notes}` : ''
+      }
 
-Please confirm this Padala booking. Thank you! 🛵`;
+Please confirm this ${serviceLabel} booking. Thank you! 🛵`;
 
       const encodedMessage = encodeURIComponent(message);
       const messengerUrl = `https://m.me/375641885639863?text=${encodedMessage}`;
@@ -119,7 +142,13 @@ Please confirm this Padala booking. Thank you! 🛵`;
         contact_number: '',
         pickup_address: '',
         delivery_address: '',
-        special_instructions: ''
+        item_description: '',
+        item_weight: '',
+        item_value: '',
+        special_instructions: '',
+        preferred_date: '',
+        preferred_time: 'Morning',
+        notes: ''
       });
       setDistance(null);
       setDeliveryFee(60);
@@ -149,8 +178,12 @@ Please confirm this Padala booking. Thank you! 🛵`;
             <span>Back to Services</span>
           </button>
           <h1 className="mt-4 text-2xl sm:text-3xl font-bold text-black flex items-center gap-2 text-center">
-            <Package className="h-7 w-7 sm:h-8 sm:w-8" />
-            Padala
+            {title !== 'Pabili' && (
+              <span className="text-2xl sm:text-3xl">
+                📦
+              </span>
+            )}
+            {title}
           </h1>
         </div>
 
@@ -222,6 +255,90 @@ Please confirm this Padala booking. Thank you! 🛵`;
             </div>
           </div>
 
+          {/* Item Details (full mode only) */}
+          {mode === 'full' && (
+            <div>
+              <h2 className="text-xl font-semibold text-gray-900 mb-4">Item Details</h2>
+              <div className="space-y-4">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">Item Description *</label>
+                  <textarea
+                    name="item_description"
+                    value={formData.item_description}
+                    onChange={handleInputChange}
+                    required={mode === 'full'}
+                    rows={3}
+                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-primary focus:border-transparent"
+                    placeholder="Describe what you're sending"
+                  />
+                </div>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">Item Weight (optional)</label>
+                    <input
+                      type="text"
+                      name="item_weight"
+                      value={formData.item_weight}
+                      onChange={handleInputChange}
+                      className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-primary focus:border-transparent"
+                      placeholder="e.g., 1kg, 2kg, light"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">Item Value (optional)</label>
+                    <input
+                      type="number"
+                      name="item_value"
+                      value={formData.item_value}
+                      onChange={handleInputChange}
+                      min="0"
+                      step="0.01"
+                      className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-primary focus:border-transparent"
+                      placeholder="₱0.00"
+                    />
+                  </div>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* Preferred Schedule (full mode only) */}
+          {mode === 'full' && (
+            <div>
+              <h2 className="text-xl font-semibold text-gray-900 mb-4 flex items-center gap-2">
+                <span>📅</span>
+                Preferred Schedule
+              </h2>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">Preferred Date</label>
+                  <input
+                    type="date"
+                    name="preferred_date"
+                    value={formData.preferred_date}
+                    onChange={handleInputChange}
+                    min={new Date().toISOString().split('T')[0]}
+                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-primary focus:border-transparent"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">Preferred Time</label>
+                  <select
+                    name="preferred_time"
+                    value={formData.preferred_time}
+                    onChange={handleInputChange}
+                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-primary focus:border-transparent"
+                  >
+                    <option value="Morning">Morning</option>
+                    <option value="Afternoon">Afternoon</option>
+                    <option value="Evening">Evening</option>
+                    <option value="Any">Any</option>
+                  </select>
+                </div>
+              </div>
+            </div>
+          )}
+
           {/* Additional Information */}
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-2">Special Instructions (optional)</label>
@@ -257,7 +374,11 @@ Please confirm this Padala booking. Thank you! 🛵`;
             disabled={isSubmitting}
             className="w-full py-4 rounded-xl font-medium text-lg transition-all duration-200 transform bg-green-primary text-white hover:bg-green-dark hover:scale-[1.02] shadow-lg disabled:opacity-50 disabled:cursor-not-allowed"
           >
-            {isSubmitting ? 'Submitting...' : 'Submit Booking Request'}
+            {isSubmitting
+              ? 'Submitting...'
+              : mode === 'simple'
+                ? 'Submit'
+                : 'Submit Booking Request'}
           </button>
         </form>
       </div>
