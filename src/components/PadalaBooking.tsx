@@ -168,16 +168,16 @@ Please confirm this package delivery booking. Thank you! 🛵`;
       />
 
       <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        <div className="flex items-center mb-8">
+        <div className="flex flex-col items-center mb-8">
           <button
             onClick={onBack}
-            className="flex items-center space-x-2 text-gray-600 hover:text-black transition-colors duration-200"
+            className="inline-flex items-center space-x-2 px-4 py-2 rounded-full bg-green-primary text-white text-sm sm:text-base font-medium shadow hover:bg-green-dark transition-colors duration-200"
           >
-            <ArrowLeft className="h-5 w-5" />
+            <ArrowLeft className="h-4 w-4" />
             <span>Back to Services</span>
           </button>
-          <h1 className="text-3xl font-bold text-black ml-8 flex items-center gap-2">
-            <Package className="h-8 w-8" />
+          <h1 className="mt-4 text-2xl sm:text-3xl font-bold text-black flex items-center gap-2 text-center">
+            <Package className="h-7 w-7 sm:h-8 sm:w-8" />
             Package Delivery
           </h1>
         </div>
