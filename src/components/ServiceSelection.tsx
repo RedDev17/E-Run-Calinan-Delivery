@@ -47,8 +47,8 @@ const ServiceSelection: React.FC<ServiceSelectionProps> = ({ onServiceSelect }) 
   return (
     <div className="min-h-screen bg-white py-12 px-4">
       <div className="max-w-6xl mx-auto">
-        {/* Header with purple background */}
-        <div className="bg-purple-600 text-white py-6 px-6 rounded-t-xl mb-8">
+        {/* Header with green background */}
+        <div className="bg-green-600 text-white py-6 px-6 rounded-t-xl mb-8">
           <h1 className="text-3xl md:text-4xl font-bold text-center">
             Select service
           </h1>
