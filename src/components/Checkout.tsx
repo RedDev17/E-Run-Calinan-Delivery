@@ -203,6 +203,8 @@ ${cartItems.map(item => {
 🛵 Delivery Fee: ₱${deliveryFee.toFixed(2)}${distance !== null ? ` (${distance} km)` : ''}
 💰 TOTAL: ₱${finalTotalPrice.toFixed(2)}
 
+⚠️ Notice: The price will be different at the store or restaurant.
+
 💳 Payment: ${selectedPaymentMethod?.name || paymentMethod}
 📸 Payment Screenshot: Please attach your payment receipt screenshot
 
