@@ -284,26 +284,28 @@ export const useGoogleMaps = () => {
   );
 
   // Calculate delivery fee (shared by Food / Pabili / Padala / Angkas)
-  // Rules:
-  // - Base: ₱60 for the first 10km
-  // - If distance > 10km (up to 20km): add ₱20
-  // Delivery fee calculation:
-  // - Base fee: ₱60
-  // - Plus ₱15 for every 3km (or portion thereof)
-  // - Plus tiered fees:
+  // Fixed delivery fee calculation:
+  // - Base fee: ₱60 (covers first 3km)
+  // - For distances beyond 3km: add ₱15 for every additional 3km (or portion thereof)
+  // - Plus tiered fees for longer distances:
+  //   - If distance > 10km: add ₱20
   //   - If distance > 20km: add ₱50
-  //   - Else if distance > 10km: add ₱20
   const calculateDeliveryFee = useCallback((distance: number | null): number => {
     if (distance === null || distance === undefined || isNaN(distance)) {
       return 60; // Base fee if distance cannot be calculated
     }
-    const baseFee = 60;
+
+    const baseFee = 60; // Base fee covers first 3km
     
-    // Add ₱15 for every 3km (or portion thereof)
-    const kmBlocks = Math.ceil(distance / 3);
-    const distanceFee = kmBlocks * 15;
+    // For distances beyond 3km, add ₱15 for every additional 3km (or portion thereof)
+    let additionalDistanceFee = 0;
+    if (distance > 3) {
+      const additionalKm = distance - 3;
+      const additionalBlocks = Math.ceil(additionalKm / 3);
+      additionalDistanceFee = additionalBlocks * 15;
+    }
     
-    // Add tiered fees
+    // Add tiered fees for longer distances
     let tierFee = 0;
     if (distance > 20) {
       tierFee = 50;
@@ -311,7 +313,7 @@ export const useGoogleMaps = () => {
       tierFee = 20;
     }
     
-    return baseFee + distanceFee + tierFee;
+    return baseFee + additionalDistanceFee + tierFee;
   }, []);
 
   // Check if customer address is within delivery area (distance from restaurant)
@@ -354,4 +356,3 @@ export const useGoogleMaps = () => {
     maxDeliveryRadius: MAX_DELIVERY_RADIUS_KM
   };
 };
-
