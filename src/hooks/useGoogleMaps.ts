@@ -295,7 +295,7 @@ export const useGoogleMaps = () => {
       return 60; // Base fee if distance cannot be calculated
     }
 
-    const baseFee = 60; // Base fee covers first 3km
+    const baseFee = 65; // Base fee covers first 3km
     
     // For distances beyond 3km, add ₱15 for every additional 3km (or portion thereof)
     let additionalDistanceFee = 0;
