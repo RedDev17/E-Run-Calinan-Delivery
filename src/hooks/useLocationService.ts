@@ -53,12 +53,7 @@ export const useLocationService = () => {
       // Helper function to fetch coordinates
       const fetchCoords = async (query: string) => {
         const response = await fetch(
-          `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(query)}&limit=1&countrycodes=ph`,
-          {
-            headers: {
-              'User-Agent': 'E-Run-Delivery-App' // Required by Nominatim
-            }
-          }
+          `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(query)}&limit=1&countrycodes=ph`
         );
         
         if (!response.ok) return null;
