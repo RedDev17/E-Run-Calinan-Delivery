@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { ArrowLeft, MapPin, Navigation } from 'lucide-react';
 import { CartItem, PaymentMethod } from '../types';
 import { usePaymentMethods } from '../hooks/usePaymentMethods';
-import { useGoogleMaps } from '../hooks/useGoogleMaps';
+import { useLocationService } from '../hooks/useLocationService';
 import DeliveryMap from './DeliveryMap';
 
 interface CheckoutProps {
@@ -13,7 +13,7 @@ interface CheckoutProps {
 
 const Checkout: React.FC<CheckoutProps> = ({ cartItems, totalPrice, onBack }) => {
   const { paymentMethods } = usePaymentMethods();
-  const { calculateDistance, calculateDeliveryFee, isWithinDeliveryArea, restaurantLocation, maxDeliveryRadius } = useGoogleMaps();
+  const { calculateDistance, calculateDeliveryFee, isWithinDeliveryArea, restaurantLocation, maxDeliveryRadius, geocodeAddressOSM } = useLocationService();
   const [step, setStep] = useState<'details' | 'payment'>('details');
   const [customerName, setCustomerName] = useState('');
   const [contactNumber, setContactNumber] = useState('');
@@ -30,6 +30,7 @@ const Checkout: React.FC<CheckoutProps> = ({ cartItems, totalPrice, onBack }) =>
   // Delivery area validation
   const [isWithinArea, setIsWithinArea] = useState<boolean | null>(null);
   const [areaCheckError, setAreaCheckError] = useState<string | null>(null);
+  const [isAddressReadOnly, setIsAddressReadOnly] = useState(false);
 
   React.useEffect(() => {
     window.scrollTo({ top: 0, behavior: 'smooth' });
@@ -68,6 +69,7 @@ const Checkout: React.FC<CheckoutProps> = ({ cartItems, totalPrice, onBack }) =>
           const data = await response.json();
           if (data && data.display_name) {
             setAddress(data.display_name);
+            setIsAddressReadOnly(true);
           }
         } catch (err) {
           console.error('Reverse geocoding error:', err);
@@ -120,24 +122,9 @@ const Checkout: React.FC<CheckoutProps> = ({ cartItems, totalPrice, onBack }) =>
           
           // Get coordinates for the address to show on map
           try {
-            const fullAddress = address.includes('Davao') || address.includes('Philippines') 
-              ? address 
-              : `${address}, Davao City, Philippines`;
-            
-            const response = await fetch(
-              `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(fullAddress)}&limit=1&countrycodes=ph`,
-              {
-                headers: {
-                  'User-Agent': 'E-Run-Delivery-App'
-                }
-              }
-            );
-            const data = await response.json();
-            if (data && data.length > 0) {
-              setCustomerLocation({
-                lat: parseFloat(data[0].lat),
-                lng: parseFloat(data[0].lon)
-              });
+            const coords = await geocodeAddressOSM(address);
+            if (coords) {
+              setCustomerLocation(coords);
             }
           } catch (err) {
             console.error('Geocoding error:', err);
@@ -192,7 +179,7 @@ const Checkout: React.FC<CheckoutProps> = ({ cartItems, totalPrice, onBack }) =>
 👤 Customer: ${customerName}
 📞 Contact: ${contactNumber}
 📍 Service: Delivery
-🏠 Address: ${address}${landmark ? `\n🗺️ Landmark: ${landmark}` : ''}
+🏠 Address: ${address}${landmark ? `\n🗺️ Landmark: ${landmark}` : ''}${customerLocation ? `\n📍 Google Maps: https://www.google.com/maps?q=${customerLocation.lat},${customerLocation.lng}` : ''}
 
 
 📋 ORDER DETAILS:
@@ -354,26 +341,29 @@ Please confirm this order to proceed. Thank you for choosing E-Run Calinan Deliv
                     <span className="ml-2 text-xs text-red-600">✗ Outside delivery area</span>
                   )}
                 </label>
-                <div className="flex gap-2 mb-2">
-                  <textarea
-                    value={address}
-                    onChange={(e) => setAddress(e.target.value)}
-                    className={`flex-1 px-4 py-3 border rounded-lg focus:ring-2 focus:ring-green-primary focus:border-transparent transition-all duration-200 ${
-                      isWithinArea === false ? 'border-red-300 bg-red-50' : 'border-gray-300'
-                    }`}
-                    placeholder="Enter your complete delivery address"
-                    rows={3}
-                    required
-                  />
+                <div className="flex flex-col gap-3 mb-2">
                   <button
                     type="button"
                     onClick={getCurrentLocation}
                     disabled={isGettingLocation}
-                    className="px-4 py-3 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
+                    className="w-full py-3 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2 font-medium"
                     title="Use my current location"
                   >
                     <Navigation className={`h-5 w-5 ${isGettingLocation ? 'animate-spin' : ''}`} />
+                    {isGettingLocation ? 'Getting Location...' : 'Use My Current Location'}
                   </button>
+                  
+                  <textarea
+                    value={address}
+                    onChange={(e) => !isAddressReadOnly && setAddress(e.target.value)}
+                    readOnly={isAddressReadOnly}
+                    className={`w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-green-primary focus:border-transparent transition-all duration-200 ${
+                      isWithinArea === false ? 'border-red-300 bg-red-50' : 'border-gray-300'
+                    } ${isAddressReadOnly ? 'bg-gray-100 cursor-not-allowed' : ''}`}
+                    placeholder="Enter your complete delivery address"
+                    rows={3}
+                    required
+                  />
                 </div>
                 {isWithinArea === false && !isCalculatingDistance && (
                   <div className="mb-3 p-3 bg-red-50 border border-red-200 rounded-lg">

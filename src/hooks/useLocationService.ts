@@ -1,17 +1,17 @@
 import { useState, useCallback, useEffect } from 'react';
 
-// Restaurant location: Calinan, Davao City
+// Restaurant location: Calinan District Center
 const RESTAURANT_LOCATION = {
-  lat: 7.2906, // Calinan, Davao City latitude
-  lng: 125.3764 // Calinan, Davao City longitude
+  lat: 7.1902484, // Calinan District Center
+  lng: 125.4524905 // Calinan District Center
 };
 
-// Delivery center: Villafuerte St, Calinan District, Davao City, Davao del Sur
+// Delivery center: Calinan District, Davao City
 // This is the point from which delivery distance is calculated
 const DELIVERY_CENTER = {
-  lat: 7.2906, // Villafuerte St, Calinan District, Davao City (approximate - will be geocoded)
-  lng: 125.3764, // Villafuerte St, Calinan District, Davao City (approximate - will be geocoded)
-  address: 'Villafuerte St, Calinan District, Davao City, Davao del Sur'
+  lat: 7.1902484, // Calinan District Center
+  lng: 125.4524905, // Calinan District Center
+  address: 'Calinan District, Davao City, Davao del Sur'
 };
 
 // Maximum delivery radius in kilometers from delivery center (adjust as needed)
@@ -22,7 +22,7 @@ interface DistanceResult {
   duration?: string;
 }
 
-export const useGoogleMaps = () => {
+export const useLocationService = () => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   // Use delivery center coordinates (will be geocoded, but start with default)
@@ -50,31 +50,55 @@ export const useGoogleMaps = () => {
   // Get coordinates from address using OpenStreetMap Nominatim (FREE, no API key needed)
   const geocodeAddressOSM = async (address: string): Promise<{ lat: number; lng: number } | null> => {
     try {
-      // Add "Davao City, Philippines" to improve accuracy for local addresses
+      // Helper function to fetch coordinates
+      const fetchCoords = async (query: string) => {
+        const response = await fetch(
+          `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(query)}&limit=1&countrycodes=ph`,
+          {
+            headers: {
+              'User-Agent': 'E-Run-Delivery-App' // Required by Nominatim
+            }
+          }
+        );
+        
+        if (!response.ok) return null;
+        
+        const data = await response.json();
+        if (data && data.length > 0) {
+          return {
+            lat: parseFloat(data[0].lat),
+            lng: parseFloat(data[0].lon)
+          };
+        }
+        return null;
+      };
+
+      // 1. Try exact address with "Davao City, Philippines" appended if needed
       const fullAddress = address.includes('Davao') || address.includes('Philippines') 
         ? address 
         : `${address}, Davao City, Philippines`;
       
-      const response = await fetch(
-        `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(fullAddress)}&limit=1&countrycodes=ph`,
-        {
-          headers: {
-            'User-Agent': 'E-Run-Delivery-App' // Required by Nominatim
-          }
-        }
-      );
-      
-      if (!response.ok) {
-        throw new Error('Geocoding service unavailable');
+      let coords = await fetchCoords(fullAddress);
+      if (coords) return coords;
+
+      // 2. Fallback: If address contains "Calinan", try "Calinan District, Davao City"
+      if (address.toLowerCase().includes('calinan')) {
+        console.log('Exact address not found, trying Calinan District fallback...');
+        coords = await fetchCoords('Calinan District, Davao City, Philippines');
+        if (coords) return coords;
       }
-      
-      const data = await response.json();
-      
-      if (data && data.length > 0) {
-        return {
-          lat: parseFloat(data[0].lat),
-          lng: parseFloat(data[0].lon)
-        };
+
+      // 3. Fallback: Try just "Davao City" as a last resort to at least show map
+      // (Only if the address looks like it might be in Davao or is a short landmark name)
+      const lowerAddress = address.toLowerCase();
+      const isLocalContext = lowerAddress.includes('davao') || lowerAddress.includes('calinan');
+      const isShortAddress = address.length < 25; // Heuristic for landmarks
+      const hasOtherLocation = lowerAddress.includes('cavite') || lowerAddress.includes('manila') || lowerAddress.includes('cebu') || lowerAddress.includes('quezon') || lowerAddress.includes('luzon') || lowerAddress.includes('visayas');
+
+      if ((isLocalContext || isShortAddress) && !hasOtherLocation) {
+         console.log('Address not found, trying Davao City fallback...');
+         coords = await fetchCoords('Davao City, Philippines');
+         if (coords) return coords;
       }
       
       return null;
@@ -84,42 +108,11 @@ export const useGoogleMaps = () => {
     }
   };
 
-  // Alternative: Try Google Maps API if key is provided (optional)
-  const geocodeAddressGoogle = async (address: string): Promise<{ lat: number; lng: number } | null> => {
-    const apiKey = import.meta.env.VITE_GOOGLE_MAPS_API_KEY;
-    
-    if (!apiKey) {
-      return null;
-    }
-
-    try {
-      const response = await fetch(
-        `https://maps.googleapis.com/maps/api/geocode/json?address=${encodeURIComponent(address)}&key=${apiKey}&region=ph`
-      );
-      const data = await response.json();
-      
-      if (data.status === 'OK' && data.results.length > 0) {
-        const location = data.results[0].geometry.location;
-        return { lat: location.lat, lng: location.lng };
-      }
-      
-      return null;
-    } catch (err) {
-      console.error('Google geocoding error:', err);
-      return null;
-    }
-  };
-
   // Geocode delivery center address on first load
   useEffect(() => {
     const geocodeDeliveryCenter = async () => {
       try {
-        // Try Google geocoding first
-        let coords = await geocodeAddressGoogle(DELIVERY_CENTER.address);
-        if (!coords) {
-          // Fallback to OpenStreetMap
-          coords = await geocodeAddressOSM(DELIVERY_CENTER.address);
-        }
+        const coords = await geocodeAddressOSM(DELIVERY_CENTER.address);
         if (coords) {
           setDeliveryCenterCoords(coords);
           console.log('Delivery center geocoded:', coords);
@@ -131,57 +124,14 @@ export const useGoogleMaps = () => {
     geocodeDeliveryCenter();
   }, []);
 
-  // Calculate distance using Google Maps Distance Matrix API (if key is provided)
-  const calculateDistanceGoogle = async (destinationAddress: string): Promise<DistanceResult | null> => {
-    const apiKey = import.meta.env.VITE_GOOGLE_MAPS_API_KEY;
-    
-    if (!apiKey) {
-      return null;
-    }
-
-    try {
-      // Use delivery center coordinates for distance calculation
-      const response = await fetch(
-        `https://maps.googleapis.com/maps/api/distancematrix/json?origins=${deliveryCenterCoords.lat},${deliveryCenterCoords.lng}&destinations=${encodeURIComponent(destinationAddress)}&key=${apiKey}&units=metric&region=ph`
-      );
-      const data = await response.json();
-      
-      if (data.status === 'OK' && data.rows[0]?.elements[0]?.status === 'OK') {
-        const element = data.rows[0].elements[0];
-        const distanceInKm = element.distance.value / 1000; // Convert meters to kilometers
-        const duration = element.duration.text;
-        
-        return {
-          distance: Math.round(distanceInKm * 10) / 10, // Round to 1 decimal place
-          duration
-        };
-      }
-    } catch (err) {
-      console.warn('Google Maps API error:', err);
-    }
-    
-    return null;
-  };
-
   // Main distance calculation function - calculates from delivery center to customer address
   const calculateDistance = useCallback(async (destinationAddress: string): Promise<DistanceResult | null> => {
     setLoading(true);
     setError(null);
 
     try {
-      // Try Google Maps API first if key is available (more accurate road distance)
-      const googleResult = await calculateDistanceGoogle(destinationAddress);
-      if (googleResult) {
-        setLoading(false);
-        return googleResult;
-      }
-
-      // Fallback: Use free OpenStreetMap geocoding + Haversine formula
-      // Try Google geocoding first (if key available), then OSM
-      let coords = await geocodeAddressGoogle(destinationAddress);
-      if (!coords) {
-        coords = await geocodeAddressOSM(destinationAddress);
-      }
+      // Use free OpenStreetMap geocoding + Haversine formula
+      const coords = await geocodeAddressOSM(destinationAddress);
 
       if (coords) {
         // Calculate distance from delivery center to customer address
@@ -197,7 +147,7 @@ export const useGoogleMaps = () => {
         };
       }
 
-      // If all geocoding fails
+      // If geocoding fails
       setError('Could not find the address. Please enter a complete address including barangay and city.');
       setLoading(false);
       return null;
@@ -216,45 +166,9 @@ export const useGoogleMaps = () => {
       setError(null);
 
       try {
-        const apiKey = import.meta.env.VITE_GOOGLE_MAPS_API_KEY;
-
-        // Try Google Distance Matrix API first if key is available
-        if (apiKey) {
-          try {
-            const response = await fetch(
-              `https://maps.googleapis.com/maps/api/distancematrix/json?origins=${encodeURIComponent(
-                pickupAddress
-              )}&destinations=${encodeURIComponent(dropoffAddress)}&key=${apiKey}&units=metric&region=ph`
-            );
-            const data = await response.json();
-
-            if (data.status === 'OK' && data.rows[0]?.elements[0]?.status === 'OK') {
-              const element = data.rows[0].elements[0];
-              const distanceInKm = element.distance.value / 1000;
-              const duration = element.duration.text;
-
-              const result: DistanceResult = {
-                distance: Math.round(distanceInKm * 10) / 10,
-                duration
-              };
-              setLoading(false);
-              return result;
-            }
-          } catch (err) {
-            console.warn('Google DistanceMatrix error (pickup->dropoff):', err);
-          }
-        }
-
-        // Fallback: geocode both addresses and use Haversine
-        let pickupCoords = await geocodeAddressGoogle(pickupAddress);
-        if (!pickupCoords) {
-          pickupCoords = await geocodeAddressOSM(pickupAddress);
-        }
-
-        let dropoffCoords = await geocodeAddressGoogle(dropoffAddress);
-        if (!dropoffCoords) {
-          dropoffCoords = await geocodeAddressOSM(dropoffAddress);
-        }
+        // Geocode both addresses and use Haversine
+        const pickupCoords = await geocodeAddressOSM(pickupAddress);
+        const dropoffCoords = await geocodeAddressOSM(dropoffAddress);
 
         if (pickupCoords && dropoffCoords) {
           const distance = calculateDistanceHaversine(
@@ -320,10 +234,7 @@ export const useGoogleMaps = () => {
   const isWithinDeliveryArea = useCallback(async (address: string): Promise<{ within: boolean; distance?: number; error?: string }> => {
     try {
       // Get coordinates for the customer's delivery address
-      let coords = await geocodeAddressGoogle(address);
-      if (!coords) {
-        coords = await geocodeAddressOSM(address);
-      }
+      const coords = await geocodeAddressOSM(address);
 
       if (!coords) {
         return { within: false, error: 'Could not find the address location.' };
@@ -353,6 +264,7 @@ export const useGoogleMaps = () => {
     loading,
     error,
     restaurantLocation: RESTAURANT_LOCATION,
-    maxDeliveryRadius: MAX_DELIVERY_RADIUS_KM
+    maxDeliveryRadius: MAX_DELIVERY_RADIUS_KM,
+    geocodeAddressOSM // Export this function
   };
 };

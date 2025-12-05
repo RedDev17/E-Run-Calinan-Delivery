@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { ArrowLeft, MapPin } from 'lucide-react';
 import { supabase } from '../lib/supabase';
-import { useGoogleMaps } from '../hooks/useGoogleMaps';
+import { useLocationService } from '../hooks/useLocationService';
 import Header from './Header';
 
 interface PadalaBookingProps {
@@ -11,7 +11,7 @@ interface PadalaBookingProps {
 }
 
 const PadalaBooking: React.FC<PadalaBookingProps> = ({ onBack, title = 'Padala', mode = 'full' }) => {
-  const { calculateDistanceBetweenAddresses, calculateDeliveryFee } = useGoogleMaps();
+  const { calculateDistanceBetweenAddresses, calculateDeliveryFee } = useLocationService();
   const [formData, setFormData] = useState({
     customer_name: '',
     contact_number: '',

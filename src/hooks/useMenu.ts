@@ -19,7 +19,7 @@ export const useMenu = () => {
           variations (*),
           add_ons (*)
         `)
-        .is('restaurant_id', null)
+        // .is('restaurant_id', null) // Removed to fetch ALL items for admin dashboard
         .order('created_at', { ascending: true });
 
       if (itemsError) throw itemsError;

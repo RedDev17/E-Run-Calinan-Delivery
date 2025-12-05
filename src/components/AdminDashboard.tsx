@@ -10,7 +10,7 @@ import CategoryManager from './CategoryManager';
 import PaymentMethodManager from './PaymentMethodManager';
 import SiteSettingsManager from './SiteSettingsManager';
 import RestaurantManager from './RestaurantManager';
-import GroceryManager from './GroceryManager';
+
 
 const AdminDashboard: React.FC = () => {
   const [isAuthenticated, setIsAuthenticated] = useState(() => {
@@ -21,7 +21,7 @@ const AdminDashboard: React.FC = () => {
   const { menuItems, loading, addMenuItem, updateMenuItem, deleteMenuItem } = useMenu();
   const { categories } = useCategories();
   const { restaurants: adminRestaurants } = useRestaurantsAdmin();
-  const [currentView, setCurrentView] = useState<'dashboard' | 'items' | 'add' | 'edit' | 'categories' | 'payments' | 'settings' | 'restaurants' | 'groceries'>('dashboard');
+  const [currentView, setCurrentView] = useState<'dashboard' | 'items' | 'add' | 'edit' | 'categories' | 'payments' | 'settings' | 'restaurants'>('dashboard');
   const [editingItem, setEditingItem] = useState<MenuItem | null>(null);
   const [selectedItems, setSelectedItems] = useState<string[]>([]);
   const [isProcessing, setIsProcessing] = useState(false);
@@ -937,10 +937,7 @@ const AdminDashboard: React.FC = () => {
     return <RestaurantManager onBack={() => setCurrentView('dashboard')} />;
   }
 
-  // Groceries View
-  if (currentView === 'groceries') {
-    return <GroceryManager onBack={() => setCurrentView('dashboard')} />;
-  }
+
 
   // Dashboard View
   return (
@@ -1026,20 +1023,7 @@ const AdminDashboard: React.FC = () => {
           <div className="bg-white rounded-xl shadow-sm p-6">
             <h3 className="text-lg font-playfair font-medium text-black mb-4">Quick Actions</h3>
             <div className="space-y-3">
-              <button
-                onClick={handleAddItem}
-                className="w-full flex items-center space-x-3 p-3 text-left hover:bg-gray-50 rounded-lg transition-colors duration-200"
-              >
-                <Plus className="h-5 w-5 text-gray-400" />
-                <span className="font-medium text-gray-900">Add New Menu Item</span>
-              </button>
-              <button
-                onClick={() => setCurrentView('items')}
-                className="w-full flex items-center space-x-3 p-3 text-left hover:bg-gray-50 rounded-lg transition-colors duration-200"
-              >
-                <Package className="h-5 w-5 text-gray-400" />
-                <span className="font-medium text-gray-900">Manage Menu Items</span>
-              </button>
+
               <button
                 onClick={() => setCurrentView('categories')}
                 className="w-full flex items-center space-x-3 p-3 text-left hover:bg-gray-50 rounded-lg transition-colors duration-200"
@@ -1054,13 +1038,7 @@ const AdminDashboard: React.FC = () => {
                 <Coffee className="h-5 w-5 text-gray-400" />
                 <span className="font-medium text-gray-900">Manage Restaurants</span>
               </button>
-              <button
-                onClick={() => setCurrentView('groceries')}
-                className="w-full flex items-center space-x-3 p-3 text-left hover:bg-gray-50 rounded-lg transition-colors duration-200"
-              >
-                <ShoppingCart className="h-5 w-5 text-gray-400" />
-                <span className="font-medium text-gray-900">Manage Groceries</span>
-              </button>
+
               <button
                 onClick={() => setCurrentView('payments')}
                 className="w-full flex items-center space-x-3 p-3 text-left hover:bg-gray-50 rounded-lg transition-colors duration-200"
