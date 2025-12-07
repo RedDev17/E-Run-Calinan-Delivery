@@ -216,7 +216,6 @@ ${items.map(item => {
 }).join('\n')}`).join('\n')}
 
 💰 Subtotal: ₱${totalPrice}
-🛵 Delivery Fee: ₱${deliveryFee.toFixed(2)}${distance !== null ? ` (${distance} km)` : ''}
 💰 TOTAL: ₱${finalTotalPrice.toFixed(2)}
 
 ⚠️ Notice: The price will be different at the store or restaurant.
@@ -290,19 +289,7 @@ Please confirm this order to proceed. Thank you for choosing E-Run Calinan Deliv
                 <span className="text-gray-600">Subtotal:</span>
                 <span className="text-gray-900">₱{totalPrice.toFixed(2)}</span>
               </div>
-              <div className="flex items-center justify-between text-sm">
-                <span className="text-gray-600 flex items-center gap-1">
-                  <MapPin className="h-4 w-4" />
-                  Delivery Fee:
-                  {isCalculatingDistance && (
-                    <span className="text-xs text-gray-500 ml-1">(calculating...)</span>
-                  )}
-                  {distance !== null && !isCalculatingDistance && (
-                    <span className="text-xs text-gray-500 ml-1">({distance} km)</span>
-                  )}
-                </span>
-                <span className="text-gray-900 font-semibold">₱{deliveryFee.toFixed(2)}</span>
-              </div>
+              {/* Delivery Fee removed as per request */}
               <div className="flex items-center justify-between text-2xl font-noto font-semibold text-black pt-2 border-t border-gray-200">
                 <span>Total:</span>
                 <span>₱{finalTotalPrice.toFixed(2)}</span>
@@ -567,16 +554,7 @@ Please confirm this order to proceed. Thank you for choosing E-Run Calinan Deliv
               <span className="text-gray-600">Subtotal:</span>
               <span className="text-gray-900">₱{totalPrice.toFixed(2)}</span>
             </div>
-            <div className="flex items-center justify-between text-sm">
-              <span className="text-gray-600 flex items-center gap-1">
-                <MapPin className="h-4 w-4" />
-                Delivery Fee:
-                {distance !== null && (
-                  <span className="text-xs text-gray-500 ml-1">({distance} km)</span>
-                )}
-              </span>
-              <span className="text-gray-900 font-semibold">₱{deliveryFee.toFixed(2)}</span>
-            </div>
+            {/* Delivery Fee removed as per request */}
             <div className="flex items-center justify-between text-2xl font-noto font-semibold text-black pt-2 border-t border-gray-200">
               <span>Total:</span>
               <span>₱{finalTotalPrice.toFixed(2)}</span>

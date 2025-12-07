@@ -290,37 +290,8 @@ export const useGoogleMaps = () => {
   // - Plus tiered fees for longer distances:
   //   - If distance > 10km: add ₱20
   //   - If distance > 20km: add ₱50
-  const calculateDeliveryFee = useCallback((distance: number | null): number => {
-    if (distance === null || distance === undefined || isNaN(distance)) {
-      return 65; // Base fee if distance cannot be calculated
-    }
-
-    let totalFee = 65; // Base fee
-
-    // Additive fees based on distance thresholds
-    if (distance >= 2) {
-      totalFee += Math.floor(distance / 2) * 15;
-    }
-    if (distance >= 3) {
-      totalFee += Math.floor(distance / 3) * 25;
-    }
-    if (distance >= 5) {
-      totalFee += Math.floor(distance / 5) * 35;
-    }
-    if (distance >= 10) {
-      totalFee += Math.floor(distance / 10) * 50;
-    }
-    if (distance >= 25) {
-      totalFee += Math.floor(distance / 25) * 60;
-    }
-    if (distance >= 30) {
-      totalFee += Math.floor(distance / 30) * 100;
-    }
-    if (distance >= 45) {
-      totalFee += Math.floor(distance / 45) * 100;
-    }
-    
-    return totalFee;
+  const calculateDeliveryFee = useCallback((): number => {
+    return 0; // Delivery is now free
   }, []);
 
   // Check if customer address is within delivery area (distance from restaurant)
