@@ -1,9 +1,7 @@
 import React, { useState } from 'react';
-import { ArrowLeft, MapPin, Navigation } from 'lucide-react';
+import { ArrowLeft } from 'lucide-react';
 import { CartItem, PaymentMethod } from '../types';
 import { usePaymentMethods } from '../hooks/usePaymentMethods';
-import { useGoogleMaps } from '../hooks/useGoogleMaps';
-import DeliveryMap from './DeliveryMap';
 
 interface CheckoutProps {
   cartItems: CartItem[];
@@ -13,7 +11,6 @@ interface CheckoutProps {
 
 const Checkout: React.FC<CheckoutProps> = ({ cartItems, totalPrice, onBack }) => {
   const { paymentMethods } = usePaymentMethods();
-  const { calculateDistance, calculateDeliveryFee, isWithinDeliveryArea, restaurantLocation, maxDeliveryRadius } = useGoogleMaps();
   const [step, setStep] = useState<'details' | 'payment'>('details');
   const [customerName, setCustomerName] = useState('');
   const [contactNumber, setContactNumber] = useState('');
@@ -21,15 +18,6 @@ const Checkout: React.FC<CheckoutProps> = ({ cartItems, totalPrice, onBack }) =>
   const [landmark, setLandmark] = useState('');
   const [paymentMethod, setPaymentMethod] = useState<PaymentMethod>('gcash');
   const [notes, setNotes] = useState('');
-  // Delivery fee calculation
-  const [distance, setDistance] = useState<number | null>(null);
-  const [deliveryFee, setDeliveryFee] = useState<number>(60); // Default base fee
-  const [isCalculatingDistance, setIsCalculatingDistance] = useState(false);
-  const [customerLocation, setCustomerLocation] = useState<{ lat: number; lng: number } | null>(null);
-  const [isGettingLocation, setIsGettingLocation] = useState(false);
-  // Delivery area validation
-  const [isWithinArea, setIsWithinArea] = useState<boolean | null>(null);
-  const [areaCheckError, setAreaCheckError] = useState<string | null>(null);
 
   React.useEffect(() => {
     window.scrollTo({ top: 0, behavior: 'smooth' });
@@ -42,129 +30,10 @@ const Checkout: React.FC<CheckoutProps> = ({ cartItems, totalPrice, onBack }) =>
     }
   }, [paymentMethods]);
 
-  // Get customer's current location using browser geolocation
-  const getCurrentLocation = () => {
-    if (!navigator.geolocation) {
-      alert('Geolocation is not supported by your browser. Please enter your address manually.');
-      return;
-    }
 
-    setIsGettingLocation(true);
-    navigator.geolocation.getCurrentPosition(
-      async (position) => {
-        const { latitude, longitude } = position.coords;
-        setCustomerLocation({ lat: latitude, lng: longitude });
-        
-        // Reverse geocode to get address
-        try {
-          const response = await fetch(
-            `https://nominatim.openstreetmap.org/reverse?format=json&lat=${latitude}&lon=${longitude}&zoom=18&addressdetails=1`,
-            {
-              headers: {
-                'User-Agent': 'E-Run-Delivery-App'
-              }
-            }
-          );
-          const data = await response.json();
-          if (data && data.display_name) {
-            setAddress(data.display_name);
-          }
-        } catch (err) {
-          console.error('Reverse geocoding error:', err);
-        }
-        
-        // Calculate distance
-        const distanceResult = await calculateDistance(`${latitude},${longitude}`);
-        if (distanceResult) {
-          setDistance(distanceResult.distance);
-          const fee = calculateDeliveryFee(distanceResult.distance);
-          setDeliveryFee(fee);
-        }
-        
-        setIsGettingLocation(false);
-      },
-      (error) => {
-        console.error('Geolocation error:', error);
-        alert('Could not get your location. Please enter your address manually.');
-        setIsGettingLocation(false);
-      }
-    );
-  };
-
-  // Calculate distance and delivery fee when address changes
-  React.useEffect(() => {
-    if (address.trim()) {
-      const timeoutId = setTimeout(async () => {
-        setIsCalculatingDistance(true);
-        setAreaCheckError(null);
-        
-        // First check if address is within delivery area
-        const areaCheck = await isWithinDeliveryArea(address);
-        setIsWithinArea(areaCheck.within);
-        
-        if (areaCheck.error) {
-          setAreaCheckError(areaCheck.error);
-        }
-        
-        // Only calculate distance and fee if address is within delivery area
-        if (areaCheck.within) {
-          const result = await calculateDistance(address);
-          if (result) {
-            setDistance(result.distance);
-            const fee = calculateDeliveryFee(result.distance);
-            setDeliveryFee(fee);
-          } else {
-            setDistance(null);
-            setDeliveryFee(60);
-          }
-          
-          // Get coordinates for the address to show on map
-          try {
-            const fullAddress = address.includes('Davao') || address.includes('Philippines') 
-              ? address 
-              : `${address}, Davao City, Philippines`;
-            
-            const response = await fetch(
-              `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(fullAddress)}&limit=1&countrycodes=ph`,
-              {
-                headers: {
-                  'User-Agent': 'E-Run-Delivery-App'
-                }
-              }
-            );
-            const data = await response.json();
-            if (data && data.length > 0) {
-              setCustomerLocation({
-                lat: parseFloat(data[0].lat),
-                lng: parseFloat(data[0].lon)
-              });
-            }
-          } catch (err) {
-            console.error('Geocoding error:', err);
-          }
-        } else {
-          // Address is outside delivery area
-          setDistance(null);
-          setDeliveryFee(0);
-          setCustomerLocation(null);
-        }
-        setIsCalculatingDistance(false);
-      }, 1000); // Debounce for 1 second
-
-      return () => clearTimeout(timeoutId);
-    } else {
-      setDistance(null);
-      setDeliveryFee(60);
-      setCustomerLocation(null);
-      setIsWithinArea(null);
-      setAreaCheckError(null);
-    }
-  }, [address, calculateDistance, calculateDeliveryFee, isWithinDeliveryArea]);
 
   // Calculate total price including delivery fee
-  const finalTotalPrice = React.useMemo(() => {
-    return totalPrice + deliveryFee;
-  }, [totalPrice, deliveryFee]);
+  const finalTotalPrice = totalPrice;
 
   // Group items by restaurant
   const groupedItems = React.useMemo(() => {
@@ -234,7 +103,7 @@ Please confirm this order to proceed. Thank you for choosing E-Run Calinan Deliv
     window.open(messengerUrl, '_blank');
   };
 
-  const isDetailsValid = customerName && contactNumber && address && isWithinArea === true;
+  const isDetailsValid = customerName && contactNumber && address;
 
   if (step === 'details') {
     return (
@@ -327,67 +196,19 @@ Please confirm this order to proceed. Thank you for choosing E-Run Calinan Deliv
                 />
               </div>
 
-              {/* Delivery Address with Map */}
+              {/* Delivery Address */}
               <div>
                 <label className="block text-sm font-medium text-black mb-2">
                   Delivery Address *
-                  {isCalculatingDistance && (
-                    <span className="ml-2 text-xs text-gray-500">Checking delivery area...</span>
-                  )}
-                  {isWithinArea === true && distance !== null && !isCalculatingDistance && (
-                    <span className="ml-2 text-xs text-green-600">✓ Within area • Distance: {distance} km</span>
-                  )}
-                  {isWithinArea === false && !isCalculatingDistance && (
-                    <span className="ml-2 text-xs text-red-600">✗ Outside delivery area</span>
-                  )}
                 </label>
-                <div className="flex gap-2 mb-2">
-                  <textarea
-                    value={address}
-                    onChange={(e) => setAddress(e.target.value)}
-                    className={`flex-1 px-4 py-3 border rounded-lg focus:ring-2 focus:ring-green-primary focus:border-transparent transition-all duration-200 ${
-                      isWithinArea === false ? 'border-red-300 bg-red-50' : 'border-gray-300'
-                    }`}
-                    placeholder="Enter your complete delivery address"
-                    rows={3}
-                    required
-                  />
-                  <button
-                    type="button"
-                    onClick={getCurrentLocation}
-                    disabled={isGettingLocation}
-                    className="px-4 py-3 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
-                    title="Use my current location"
-                  >
-                    <Navigation className={`h-5 w-5 ${isGettingLocation ? 'animate-spin' : ''}`} />
-                  </button>
-                </div>
-                {isWithinArea === false && !isCalculatingDistance && (
-                  <div className="mb-3 p-3 bg-red-50 border border-red-200 rounded-lg">
-                    <p className="text-sm text-red-800 font-medium">
-                      ⚠️ Delivery not available to this address
-                    </p>
-                    <p className="text-xs text-red-600 mt-1">
-                      We only deliver to addresses within {maxDeliveryRadius}km from our restaurant location.
-                    </p>
-                    {areaCheckError && (
-                      <p className="text-xs text-red-500 mt-1">{areaCheckError}</p>
-                    )}
-                  </div>
-                )}
-                
-                
-                {/* Map Display */}
-                {(customerLocation || address) && (
-                  <div className="mt-4">
-                    <DeliveryMap
-                      restaurantLocation={restaurantLocation}
-                      customerLocation={customerLocation}
-                      distance={distance}
-                      address={address}
-                    />
-                  </div>
-                )}
+                <textarea
+                  value={address}
+                  onChange={(e) => setAddress(e.target.value)}
+                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-primary focus:border-transparent transition-all duration-200"
+                  placeholder="Enter your complete delivery address"
+                  rows={3}
+                  required
+                />
               </div>
               
               <div>
