@@ -47,13 +47,17 @@ export const useLocationService = () => {
     return straightLineDistance * 1.2;
   };
 
+  // Viewbox for Davao City/Calinan area to bias search results
+  // Format: min_lon,min_lat,max_lon,max_lat (approximate bounding box for Davao)
+  const VIEWBOX = '125.30,7.00,125.70,7.60';
+
   // Get coordinates from address using OpenStreetMap Nominatim (FREE, no API key needed)
   const geocodeAddressOSM = async (address: string): Promise<{ lat: number; lng: number } | null> => {
     try {
       // Helper function to fetch coordinates
       const fetchCoords = async (query: string) => {
         const response = await fetch(
-          `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(query)}&limit=1&countrycodes=ph`
+          `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(query)}&limit=1&countrycodes=ph&viewbox=${VIEWBOX}&bounded=1`
         );
         
         if (!response.ok) return null;
@@ -68,22 +72,32 @@ export const useLocationService = () => {
         return null;
       };
 
-      // 1. Try exact address with "Davao City, Philippines" appended if needed
+      // 1. Try exact address as typed by user (best for specific places like "Lagazo Village")
+      let coords = await fetchCoords(address);
+      if (coords) return coords;
+
+      // 2. Try with "Calinan, Davao City" appended (since this is the main service area)
+      if (!address.toLowerCase().includes('calinan')) {
+        coords = await fetchCoords(`${address}, Calinan, Davao City`);
+        if (coords) return coords;
+      }
+
+      // 3. Try with "Davao City, Philippines" appended (broader context)
       const fullAddress = address.includes('Davao') || address.includes('Philippines') 
         ? address 
         : `${address}, Davao City, Philippines`;
       
-      let coords = await fetchCoords(fullAddress);
+      coords = await fetchCoords(fullAddress);
       if (coords) return coords;
 
-      // 2. Fallback: If address contains "Calinan", try "Calinan District, Davao City"
+      // 4. Fallback: If address contains "Calinan", try "Calinan District, Davao City"
       if (address.toLowerCase().includes('calinan')) {
         console.log('Exact address not found, trying Calinan District fallback...');
         coords = await fetchCoords('Calinan District, Davao City, Philippines');
         if (coords) return coords;
       }
 
-      // 3. Fallback: Try just "Davao City" as a last resort to at least show map
+      // 5. Fallback: Try just "Davao City" as a last resort to at least show map
       // (Only if the address looks like it might be in Davao or is a short landmark name)
       const lowerAddress = address.toLowerCase();
       const isLocalContext = lowerAddress.includes('davao') || lowerAddress.includes('calinan');
@@ -193,36 +207,41 @@ export const useLocationService = () => {
   );
 
   // Calculate delivery fee (shared by Food / Pabili / Padala / Angkas)
-  // Fixed delivery fee calculation:
-  // - Base fee: ₱65 (covers first 3km)
-  // - For distances beyond 3km: add ₱15 for every additional 3km (or portion thereof)
-  // - Plus tiered fees for longer distances:
-  //   - If distance > 10km: add ₱20
-  //   - If distance > 20km: add ₱50
+  // Tiered delivery fee calculation:
+  // - Base fee: ₱65 (0-2km)
+  // - > 2km: +₱15
+  // - > 3km: +₱25
+  // - > 5km: +₱35
+  // - > 10km: +₱50
+  // - > 25km: +₱60
+  // - > 30km: +₱100
+  // - > 45km: +₱200
   const calculateDeliveryFee = useCallback((distance: number | null): number => {
     if (distance === null || distance === undefined || isNaN(distance)) {
       return 65; // Base fee if distance cannot be calculated
     }
 
-    const baseFee = 65; // Base fee covers first 3km
-    
-    // For distances beyond 3km, add ₱15 for every additional 3km (or portion thereof)
-    let additionalDistanceFee = 0;
-    if (distance > 3) {
-      const additionalKm = distance - 3;
-      const additionalBlocks = Math.ceil(additionalKm / 3);
-      additionalDistanceFee = additionalBlocks * 15;
-    }
-    
-    // Add tiered fees for longer distances
-    let tierFee = 0;
-    if (distance > 20) {
-      tierFee = 50;
+    const baseFee = 65;
+    let surcharge = 0;
+
+    // Tiered surcharges based on distance
+    if (distance > 45) {
+      surcharge = 200; // Additional 100 on top of 30km rate (100 + 100)
+    } else if (distance > 30) {
+      surcharge = 100;
+    } else if (distance > 25) {
+      surcharge = 60;
     } else if (distance > 10) {
-      tierFee = 20;
+      surcharge = 50;
+    } else if (distance > 5) {
+      surcharge = 35;
+    } else if (distance > 3) {
+      surcharge = 25;
+    } else if (distance > 2) {
+      surcharge = 15;
     }
     
-    return baseFee + additionalDistanceFee + tierFee;
+    return baseFee + surcharge;
   }, []);
 
   // Check if customer address is within delivery area (distance from restaurant)

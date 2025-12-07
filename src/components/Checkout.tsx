@@ -31,7 +31,7 @@ const Checkout: React.FC<CheckoutProps> = ({ cartItems, totalPrice, onBack }) =>
   const [isWithinArea, setIsWithinArea] = useState<boolean | null>(null);
   const [areaCheckError, setAreaCheckError] = useState<string | null>(null);
   const [isAddressReadOnly, setIsAddressReadOnly] = useState(false);
-  const [showAddressInput, setShowAddressInput] = useState(false);
+
 
   React.useEffect(() => {
     window.scrollTo({ top: 0, behavior: 'smooth' });
@@ -52,7 +52,7 @@ const Checkout: React.FC<CheckoutProps> = ({ cartItems, totalPrice, onBack }) =>
     }
 
     setIsGettingLocation(true);
-    setShowAddressInput(true);
+    setIsGettingLocation(true);
     navigator.geolocation.getCurrentPosition(
       async (position) => {
         const { latitude, longitude } = position.coords;
@@ -88,6 +88,33 @@ const Checkout: React.FC<CheckoutProps> = ({ cartItems, totalPrice, onBack }) =>
         setIsGettingLocation(false);
       }
     );
+  };
+
+  // Handle manual location selection on map
+  const handleLocationSelect = async (lat: number, lng: number) => {
+    setCustomerLocation({ lat, lng });
+    
+    // Reverse geocode to get address
+    try {
+      const response = await fetch(
+        `https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lng}&zoom=18&addressdetails=1`
+      );
+      const data = await response.json();
+      if (data && data.display_name) {
+        setAddress(data.display_name);
+        setIsAddressReadOnly(false); // Allow editing even after drag
+      }
+    } catch (err) {
+      console.error('Reverse geocoding error:', err);
+    }
+    
+    // Calculate distance
+    const distanceResult = await calculateDistance(`${lat},${lng}`);
+    if (distanceResult) {
+      setDistance(distanceResult.distance);
+      const fee = calculateDeliveryFee(distanceResult.distance);
+      setDeliveryFee(fee);
+    }
   };
 
   // Calculate distance and delivery fee when address changes
@@ -349,20 +376,18 @@ Please confirm this order to proceed. Thank you for choosing E-Run Calinan Deliv
                     <Navigation className={`h-5 w-5 ${isGettingLocation ? 'animate-spin' : ''}`} />
                     {isGettingLocation ? 'Getting Location...' : 'Use My Current Location'}
                   </button>
-                  
-                  {showAddressInput && (
-                    <textarea
-                      value={address}
-                      onChange={(e) => !isAddressReadOnly && setAddress(e.target.value)}
-                      readOnly={isAddressReadOnly}
-                      className={`w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-green-primary focus:border-transparent transition-all duration-200 ${
-                        isWithinArea === false ? 'border-red-300 bg-red-50' : 'border-gray-300'
-                      } ${isAddressReadOnly ? 'bg-gray-100 cursor-not-allowed' : ''}`}
-                      placeholder="Enter your complete delivery address"
-                      rows={3}
-                      required
-                    />
-                  )}
+
+                  <textarea
+                    value={address}
+                    onChange={(e) => !isAddressReadOnly && setAddress(e.target.value)}
+                    readOnly={isAddressReadOnly}
+                    className={`w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-green-primary focus:border-transparent transition-all duration-200 ${
+                      isWithinArea === false ? 'border-red-300 bg-red-50' : 'border-gray-300'
+                    } ${isAddressReadOnly ? 'bg-gray-100 cursor-not-allowed' : ''}`}
+                    placeholder="Enter your complete delivery address"
+                    rows={3}
+                    required
+                  />
                 </div>
                 {isWithinArea === false && !isCalculatingDistance && (
                   <div className="mb-3 p-3 bg-red-50 border border-red-200 rounded-lg">
@@ -387,6 +412,7 @@ Please confirm this order to proceed. Thank you for choosing E-Run Calinan Deliv
                       customerLocation={customerLocation}
                       distance={distance}
                       address={address}
+                      onLocationSelect={handleLocationSelect}
                     />
                   </div>
                 )}

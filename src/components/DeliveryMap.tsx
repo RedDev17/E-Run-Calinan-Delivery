@@ -1,5 +1,5 @@
-import React, { useEffect, useState } from 'react';
-import { MapContainer, TileLayer, Marker, Popup, Polyline, useMap } from 'react-leaflet';
+import React, { useEffect, useState, useMemo, useRef } from 'react';
+import { MapContainer, TileLayer, Marker, Popup, Polyline, useMap, useMapEvents } from 'react-leaflet';
 import L from 'leaflet';
 
 // Fix for default marker icons in Leaflet with React
@@ -66,6 +66,7 @@ interface DeliveryMapProps {
   customerLocation: { lat: number; lng: number } | null;
   distance?: number | null;
   address?: string;
+  onLocationSelect?: (lat: number, lng: number) => void;
 }
 
 // Component to fit map bounds to show both markers
@@ -91,9 +92,24 @@ const DeliveryMap: React.FC<DeliveryMapProps> = ({
   restaurantLocation,
   customerLocation,
   distance,
-  address
+  address,
+  onLocationSelect
 }) => {
   const [mapReady, setMapReady] = useState(false);
+  const markerRef = useRef<L.Marker>(null);
+
+  const eventHandlers = useMemo(
+    () => ({
+      dragend() {
+        const marker = markerRef.current;
+        if (marker && onLocationSelect) {
+          const { lat, lng } = marker.getLatLng();
+          onLocationSelect(lat, lng);
+        }
+      },
+    }),
+    [onLocationSelect],
+  );
 
   useEffect(() => {
     // Only render map on client side
@@ -149,7 +165,13 @@ const DeliveryMap: React.FC<DeliveryMapProps> = ({
         {/* Customer Marker */}
         {customerLocation && (
           <>
-            <Marker position={[customerLocation.lat, customerLocation.lng]} icon={customerIcon}>
+            <Marker 
+              draggable={!!onLocationSelect}
+              eventHandlers={eventHandlers}
+              position={[customerLocation.lat, customerLocation.lng]} 
+              icon={customerIcon}
+              ref={markerRef}
+            >
               <Popup>
                 <div className="text-center">
                   <p className="font-semibold text-blue-600">📍 Delivery Address</p>
