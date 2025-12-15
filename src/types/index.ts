@@ -166,3 +166,23 @@ export interface Request {
   created_at: string;
   updated_at: string;
 }
+
+// Promo Code
+export interface PromoCode {
+  id: string;
+  code: string;
+  description?: string;
+  discount_type: 'percentage' | 'fixed_amount';
+  discount_value: number;
+  applicable_to: 'delivery_fee' | 'food_items' | 'total';
+  min_order_amount?: number;
+  max_discount_amount?: number;
+  start_date: string;
+  end_date: string;
+  usage_limit?: number;
+  usage_count: number;
+  active: boolean;
+  is_new_user_only?: boolean;
+  created_at?: string;
+  updated_at?: string;
+}

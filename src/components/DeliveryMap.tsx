@@ -67,6 +67,7 @@ interface DeliveryMapProps {
   distance?: number | null;
   address?: string;
   onLocationSelect?: (lat: number, lng: number) => void;
+  routeCoordinates?: [number, number][] | null;
 }
 
 // Component to fit map bounds to show both markers
@@ -93,7 +94,8 @@ const DeliveryMap: React.FC<DeliveryMapProps> = ({
   customerLocation,
   distance,
   address,
-  onLocationSelect
+  onLocationSelect,
+  routeCoordinates
 }) => {
   const [mapReady, setMapReady] = useState(false);
   const markerRef = useRef<L.Marker>(null);
@@ -133,9 +135,9 @@ const DeliveryMap: React.FC<DeliveryMapProps> = ({
     ? [(restaurantLocation.lat + customerLocation.lat) / 2, (restaurantLocation.lng + customerLocation.lng) / 2]
     : [restaurantLocation.lat, restaurantLocation.lng];
 
-  const path: [number, number][] = customerLocation
+  const path: [number, number][] = routeCoordinates || (customerLocation
     ? [[restaurantLocation.lat, restaurantLocation.lng], [customerLocation.lat, customerLocation.lng]]
-    : [];
+    : []);
 
   return (
     <div className="w-full h-64 rounded-lg overflow-hidden border-2 border-gray-300 shadow-lg">
@@ -146,8 +148,8 @@ const DeliveryMap: React.FC<DeliveryMapProps> = ({
         scrollWheelZoom={true}
       >
         <TileLayer
-          attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
-          url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+          attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors &copy; <a href="https://carto.com/attributions">CARTO</a>'
+          url="https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png"
         />
         
         <MapBounds restaurantLocation={restaurantLocation} customerLocation={customerLocation} />
@@ -188,10 +190,9 @@ const DeliveryMap: React.FC<DeliveryMapProps> = ({
             {/* Route line connecting restaurant and customer */}
             <Polyline
               positions={path}
-              color="#22c55e"
+              color="#16a34a" // green-600 to match brand
               weight={5}
               opacity={0.8}
-              dashArray="15, 10"
             />
           </>
         )}

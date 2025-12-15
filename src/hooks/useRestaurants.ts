@@ -102,6 +102,7 @@ export const useRestaurants = () => {
       if (updates.active !== undefined) updateData.active = updates.active;
       if (updates.sort_order !== undefined) updateData.sort_order = updates.sort_order;
 
+
       const { error: updateError } = await supabase
         .from('restaurants')
         .update(updateData)

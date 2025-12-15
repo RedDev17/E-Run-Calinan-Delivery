@@ -1,8 +1,9 @@
 import React, { useState } from 'react';
-import { ArrowLeft, MapPin, Navigation } from 'lucide-react';
-import { CartItem, PaymentMethod } from '../types';
+import { ArrowLeft, MapPin, Navigation, Tag, X } from 'lucide-react';
+import { CartItem, PaymentMethod, PromoCode } from '../types';
 import { usePaymentMethods } from '../hooks/usePaymentMethods';
 import { useLocationService } from '../hooks/useLocationService';
+import { usePromoCodes } from '../hooks/usePromoCodes';
 import DeliveryMap from './DeliveryMap';
 
 interface CheckoutProps {
@@ -13,7 +14,9 @@ interface CheckoutProps {
 
 const Checkout: React.FC<CheckoutProps> = ({ cartItems, totalPrice, onBack }) => {
   const { paymentMethods } = usePaymentMethods();
-  const { calculateDistance, calculateDeliveryFee, isWithinDeliveryArea, restaurantLocation, maxDeliveryRadius, geocodeAddressOSM } = useLocationService();
+  const { calculateDistance, calculateDeliveryFee, isWithinDeliveryArea, restaurantLocation, maxDeliveryRadius, geocodeAddressOSM, getRouteOSRM } = useLocationService();
+  const { validatePromoCode, incrementUsage } = usePromoCodes();
+
   const [step, setStep] = useState<'details' | 'payment'>('details');
   const [customerName, setCustomerName] = useState('');
   const [contactNumber, setContactNumber] = useState('');
@@ -31,7 +34,25 @@ const Checkout: React.FC<CheckoutProps> = ({ cartItems, totalPrice, onBack }) =>
   const [isWithinArea, setIsWithinArea] = useState<boolean | null>(null);
   const [areaCheckError, setAreaCheckError] = useState<string | null>(null);
   const [isAddressReadOnly, setIsAddressReadOnly] = useState(false);
+  const [routeCoordinates, setRouteCoordinates] = useState<[number, number][] | null>(null);
 
+  // Promo Code State
+  const [promoCodeInput, setPromoCodeInput] = useState('');
+  const [appliedPromo, setAppliedPromo] = useState<PromoCode | null>(null);
+  const [promoError, setPromoError] = useState<string | null>(null);
+  const [discountAmount, setDiscountAmount] = useState(0);
+  const [isValidatingPromo, setIsValidatingPromo] = useState(false);
+
+
+  const [ipAddress, setIpAddress] = useState<string | undefined>(undefined);
+
+  // Fetch IP address
+  React.useEffect(() => {
+    fetch('https://api.ipify.org?format=json')
+      .then(response => response.json())
+      .then(data => setIpAddress(data.ip))
+      .catch(err => console.error('Error fetching IP:', err));
+  }, []);
 
   React.useEffect(() => {
     window.scrollTo({ top: 0, behavior: 'smooth' });
@@ -78,6 +99,9 @@ const Checkout: React.FC<CheckoutProps> = ({ cartItems, totalPrice, onBack }) =>
           setDistance(distanceResult.distance);
           const fee = calculateDeliveryFee(distanceResult.distance);
           setDeliveryFee(fee);
+          if (distanceResult.routeCoordinates) {
+            setRouteCoordinates(distanceResult.routeCoordinates);
+          }
         }
         
         setIsGettingLocation(false);
@@ -88,6 +112,11 @@ const Checkout: React.FC<CheckoutProps> = ({ cartItems, totalPrice, onBack }) =>
         setIsGettingLocation(false);
       }
     );
+  };
+
+  const updateRoute = async (lat: number, lng: number) => {
+    const route = await getRouteOSRM(restaurantLocation, { lat, lng });
+    setRouteCoordinates(route);
   };
 
   // Handle manual location selection on map
@@ -114,7 +143,13 @@ const Checkout: React.FC<CheckoutProps> = ({ cartItems, totalPrice, onBack }) =>
       setDistance(distanceResult.distance);
       const fee = calculateDeliveryFee(distanceResult.distance);
       setDeliveryFee(fee);
+      if (distanceResult.routeCoordinates) {
+        setRouteCoordinates(distanceResult.routeCoordinates);
+      }
     }
+    
+    // Update route
+    await updateRoute(lat, lng);
   };
 
   // Calculate distance and delivery fee when address changes
@@ -139,6 +174,9 @@ const Checkout: React.FC<CheckoutProps> = ({ cartItems, totalPrice, onBack }) =>
             setDistance(result.distance);
             const fee = calculateDeliveryFee(result.distance);
             setDeliveryFee(fee);
+            if (result.routeCoordinates) {
+              setRouteCoordinates(result.routeCoordinates);
+            }
           } else {
             setDistance(null);
             setDeliveryFee(60);
@@ -172,10 +210,85 @@ const Checkout: React.FC<CheckoutProps> = ({ cartItems, totalPrice, onBack }) =>
     }
   }, [address, calculateDistance, calculateDeliveryFee, isWithinDeliveryArea]);
 
-  // Calculate total price including delivery fee
+  // Calculate total price including delivery fee and discount
   const finalTotalPrice = React.useMemo(() => {
-    return totalPrice + deliveryFee;
-  }, [totalPrice, deliveryFee]);
+    return Math.max(0, totalPrice + deliveryFee - discountAmount);
+  }, [totalPrice, deliveryFee, discountAmount]);
+  
+  // Alias for consistency with other parts of the code
+  const grandTotal = finalTotalPrice;
+
+  const handleApplyPromo = async () => {
+    if (!promoCodeInput.trim()) return;
+    
+    setIsValidatingPromo(true);
+    setPromoError(null);
+    
+    try {
+      // Determine what amount to validate against (usually subtotal for food items)
+      const { valid, message, promoCode } = await validatePromoCode(
+        promoCodeInput, 
+        totalPrice, 
+        'food', // Default to food check
+        ipAddress
+      );
+
+      if (!valid || !promoCode) {
+        setPromoError(message || 'Invalid promo code');
+        setAppliedPromo(null);
+        setDiscountAmount(0);
+      } else {
+        // Calculate actual discount based on applicability
+        let calculatedDiscount = 0;
+        
+        if (promoCode.applicable_to === 'delivery_fee') {
+           // Apply to delivery fee
+           if (promoCode.discount_type === 'percentage') {
+             calculatedDiscount = (deliveryFee * promoCode.discount_value) / 100;
+           } else {
+             calculatedDiscount = promoCode.discount_value;
+           }
+           // Cap at delivery fee amount
+           calculatedDiscount = Math.min(calculatedDiscount, deliveryFee);
+        } else if (promoCode.applicable_to === 'food_items') {
+           // Apply to subtotal
+           if (promoCode.discount_type === 'percentage') {
+             calculatedDiscount = (totalPrice * promoCode.discount_value) / 100;
+           } else {
+             calculatedDiscount = promoCode.discount_value;
+           }
+        } else {
+           // Apply to total (subtotal + delivery fee)
+           const total = totalPrice + deliveryFee;
+           if (promoCode.discount_type === 'percentage') {
+             calculatedDiscount = (total * promoCode.discount_value) / 100;
+           } else {
+             calculatedDiscount = promoCode.discount_value;
+           }
+        }
+
+        // Apply max discount limit if exists
+        if (promoCode.max_discount_amount && calculatedDiscount > promoCode.max_discount_amount) {
+          calculatedDiscount = promoCode.max_discount_amount;
+        }
+
+        setAppliedPromo(promoCode);
+        setDiscountAmount(calculatedDiscount);
+        setPromoError(null);
+      }
+    } catch (err) {
+      setPromoError('Failed to apply promo code');
+    } finally {
+      setIsValidatingPromo(false);
+    }
+  };
+
+  const handleRemovePromo = () => {
+    setAppliedPromo(null);
+    setDiscountAmount(0);
+    setPromoCodeInput('');
+    setPromoError(null);
+  };
 
   // Group items by restaurant for the message
   const groupedItems = React.useMemo(() => {
@@ -196,7 +309,11 @@ const Checkout: React.FC<CheckoutProps> = ({ cartItems, totalPrice, onBack }) =>
     setStep('payment');
   };
 
-  const handlePlaceOrder = () => {
+  const handlePlaceOrder = async () => {
+    if (appliedPromo) {
+      await incrementUsage(appliedPromo.id, ipAddress);
+    }
+
     const orderDetails = `
 🛒 E-Run Calinan Delivery ORDER
 
@@ -228,7 +345,8 @@ ${Object.entries(groupedItems).map(([restaurantName, items]) => {
 
 💰 Subtotal: ₱${totalPrice}
 🛵 Delivery Fee: ₱${deliveryFee.toFixed(2)}${distance !== null ? ` (${distance} km)` : ''}
-💰 TOTAL: ₱${finalTotalPrice.toFixed(2)}
+${appliedPromo ? `🏷️ Promo Code: ${appliedPromo.code} (-₱${discountAmount.toFixed(2)})` : ''}
+💰 TOTAL: ₱${grandTotal.toFixed(2)}
 
 ⚠️ Notice: The price will be different at the store or restaurant.
 
@@ -314,9 +432,69 @@ Please confirm this order to proceed. Thank you for choosing E-Run Calinan Deliv
                 </span>
                 <span className="text-gray-900 font-semibold">₱{deliveryFee.toFixed(2)}</span>
               </div>
+              
+              {/* Promo Code Section */}
+              <div className="py-3 border-y border-gray-100 my-2">
+                  {!appliedPromo ? (
+                    <div className="flex space-x-2">
+                      <div className="relative flex-1">
+                        <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                          <Tag className="h-4 w-4 text-gray-400" />
+                        </div>
+                        <input
+                          type="text"
+                          value={promoCodeInput}
+                          onChange={(e) => setPromoCodeInput(e.target.value.toUpperCase())}
+                          className="block w-full pl-10 pr-3 py-2 border border-gray-300 rounded-lg leading-5 bg-white placeholder-gray-500 focus:outline-none focus:placeholder-gray-400 focus:ring-1 focus:ring-green-500 focus:border-green-500 sm:text-sm"
+                          placeholder="Enter promo code"
+                        />
+                      </div>
+                      <button
+                        onClick={handleApplyPromo}
+                        disabled={isValidatingPromo || !promoCodeInput}
+                        className="px-4 py-2 bg-gray-900 text-white text-sm font-medium rounded-lg hover:bg-gray-800 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-900 disabled:opacity-50 disabled:cursor-not-allowed"
+                      >
+                        {isValidatingPromo ? '...' : 'Apply'}
+                      </button>
+                    </div>
+                  ) : (
+                    <div className="flex items-center justify-between bg-green-50 px-3 py-2 rounded-lg border border-green-100">
+                      <div className="flex items-center space-x-2">
+                        <Tag className="h-4 w-4 text-green-600" />
+                        <div>
+                          <p className="text-sm font-medium text-green-900">
+                            Code: {appliedPromo.code}
+                          </p>
+                          <p className="text-xs text-green-700">
+                            Discount applied
+                          </p>
+                        </div>
+                      </div>
+                      <button
+                        onClick={handleRemovePromo}
+                        className="text-gray-400 hover:text-red-500 transition-colors"
+                      >
+                        <X className="h-4 w-4" />
+                      </button>
+                    </div>
+                  )}
+                  {promoError && (
+                    <p className="mt-2 text-sm text-red-600 flex items-center">
+                      <span className="mr-1">⚠️</span> {promoError}
+                    </p>
+                  )}
+              </div>
+
+              {discountAmount > 0 && (
+                  <div className="flex justify-between text-green-600 font-medium">
+                    <span>Discount</span>
+                    <span>-₱{discountAmount.toFixed(2)}</span>
+                  </div>
+              )}
+
               <div className="flex items-center justify-between text-2xl font-noto font-semibold text-black pt-2 border-t border-gray-200">
                 <span>Total:</span>
-                <span>₱{finalTotalPrice.toFixed(2)}</span>
+                <span>₱{grandTotal.toFixed(2)}</span>
               </div>
             </div>
           </div>
@@ -413,7 +591,11 @@ Please confirm this order to proceed. Thank you for choosing E-Run Calinan Deliv
                       distance={distance}
                       address={address}
                       onLocationSelect={handleLocationSelect}
+                      routeCoordinates={routeCoordinates}
                     />
+                    <p className="text-xs text-gray-500 mt-2 text-center flex items-center justify-center gap-1">
+                      <span>💡</span> Tip: You can drag the blue pin to your exact location.
+                    </p>
                   </div>
                 )}
               </div>
@@ -505,7 +687,7 @@ Please confirm this order to proceed. Thank you for choosing E-Run Calinan Deliv
                   <p className="text-sm text-gray-600 mb-1">{selectedPaymentMethod.name}</p>
                   <p className="font-mono text-black font-medium">{selectedPaymentMethod.account_number}</p>
                   <p className="text-sm text-gray-600 mb-3">Account Name: {selectedPaymentMethod.account_name}</p>
-                  <p className="text-xl font-semibold text-black">Amount: ₱{finalTotalPrice.toFixed(2)}</p>
+                  <p className="text-xl font-semibold text-black">Amount: ₱{grandTotal.toFixed(2)}</p>
                 </div>
                 <div className="flex-shrink-0">
                   <img 
@@ -592,9 +774,17 @@ Please confirm this order to proceed. Thank you for choosing E-Run Calinan Deliv
               </span>
               <span className="text-gray-900 font-semibold">₱{deliveryFee.toFixed(2)}</span>
             </div>
+
+            {discountAmount > 0 && (
+                <div className="flex justify-between text-green-600 font-medium text-sm">
+                  <span>Discount</span>
+                  <span>-₱{discountAmount.toFixed(2)}</span>
+                </div>
+            )}
+
             <div className="flex items-center justify-between text-2xl font-noto font-semibold text-black pt-2 border-t border-gray-200">
               <span>Total:</span>
-              <span>₱{finalTotalPrice.toFixed(2)}</span>
+              <span>₱{grandTotal.toFixed(2)}</span>
             </div>
           </div>
 

@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Plus, Edit, Trash2, Save, X, ArrowLeft, Coffee, TrendingUp, Package, Lock, FolderOpen, CreditCard, Settings, ShoppingCart } from 'lucide-react';
+import { Plus, Edit, Trash2, Save, X, ArrowLeft, Coffee, TrendingUp, Package, Lock, FolderOpen, CreditCard, Settings, ShoppingCart, Tag } from 'lucide-react';
 import { MenuItem, Variation, AddOn } from '../types';
 import { addOnCategories } from '../data/menuData';
 import { useMenu } from '../hooks/useMenu';
@@ -9,7 +9,9 @@ import ImageUpload from './ImageUpload';
 import CategoryManager from './CategoryManager';
 import PaymentMethodManager from './PaymentMethodManager';
 import SiteSettingsManager from './SiteSettingsManager';
+
 import RestaurantManager from './RestaurantManager';
+import PromoCodeManager from './PromoCodeManager';
 
 
 const AdminDashboard: React.FC = () => {
@@ -21,7 +23,7 @@ const AdminDashboard: React.FC = () => {
   const { menuItems, loading, addMenuItem, updateMenuItem, deleteMenuItem } = useMenu();
   const { categories } = useCategories();
   const { restaurants: adminRestaurants } = useRestaurantsAdmin();
-  const [currentView, setCurrentView] = useState<'dashboard' | 'items' | 'add' | 'edit' | 'categories' | 'payments' | 'settings' | 'restaurants'>('dashboard');
+  const [currentView, setCurrentView] = useState<'dashboard' | 'items' | 'add' | 'edit' | 'categories' | 'payments' | 'settings' | 'restaurants' | 'promos'>('dashboard');
   const [editingItem, setEditingItem] = useState<MenuItem | null>(null);
   const [selectedItems, setSelectedItems] = useState<string[]>([]);
   const [isProcessing, setIsProcessing] = useState(false);
@@ -938,137 +940,225 @@ const AdminDashboard: React.FC = () => {
   }
 
 
+  // Promo Codes View
+  if (currentView === 'promos') {
+    return (
+      <div className="min-h-screen bg-gray-50">
+        <div className="bg-white shadow-sm border-b">
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div className="flex items-center justify-between h-16">
+              <div className="flex items-center space-x-4">
+                <button
+                  onClick={() => setCurrentView('dashboard')}
+                  className="flex items-center space-x-2 text-gray-600 hover:text-black transition-colors duration-200"
+                >
+                  <ArrowLeft className="h-5 w-5" />
+                  <span>Dashboard</span>
+                </button>
+                <h1 className="text-2xl font-playfair font-semibold text-black">Promo Codes</h1>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div className="max-w-7xl mx-auto px-4 py-8">
+          <PromoCodeManager />
+        </div>
+      </div>
+    );
+  }
 
   // Dashboard View
   return (
-    <div className="min-h-screen bg-gray-50">
-      <div className="bg-white shadow-sm border-b">
+    <div className="min-h-screen bg-gray-50 font-sans">
+      {/* Header */}
+      <div className="bg-white/80 backdrop-blur-md sticky top-0 z-10 border-b border-gray-100">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex items-center justify-between h-16">
-            <div className="flex items-center space-x-4">
-              <h1 className="text-2xl font-noto font-semibold text-black">E-Run Calinan Delivery Admin</h1>
+          <div className="flex items-center justify-between h-20">
+            <div className="flex items-center space-x-3">
+              <div className="bg-green-600 p-2 rounded-lg">
+                <Lock className="h-6 w-6 text-white" />
+              </div>
+              <h1 className="text-2xl font-playfair font-bold text-gray-900">Admin Dashboard</h1>
             </div>
-            <div className="flex items-center space-x-4">
-              <a
-                href="/"
-                className="text-gray-600 hover:text-black transition-colors duration-200"
-              >
-                View Website
-              </a>
-              <button
-                onClick={handleLogout}
-                className="text-gray-600 hover:text-black transition-colors duration-200"
-              >
-                Logout
-              </button>
-            </div>
+            <button
+              onClick={handleLogout}
+              className="group flex items-center space-x-2 px-4 py-2 rounded-lg text-gray-600 hover:text-red-600 hover:bg-red-50 transition-all duration-200"
+            >
+              <span className="font-medium">Logout</span>
+              <ArrowLeft className="h-4 w-4 group-hover:-translate-x-1 transition-transform" />
+            </button>
           </div>
         </div>
       </div>
 
-      <div className="max-w-7xl mx-auto px-4 py-8">
-        {/* Stats Cards */}
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
-          <div className="bg-white rounded-xl shadow-sm p-6">
-            <div className="flex items-center">
-              <div className="p-2 bg-green-600 rounded-lg">
-                <Package className="h-6 w-6 text-white" />
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-8">
+        
+        {/* Welcome Section */}
+        <div className="flex items-center justify-between">
+          <div>
+            <h2 className="text-3xl font-playfair font-bold text-gray-900">Overview</h2>
+            <p className="text-gray-500 mt-1">Welcome back, here's what's happening today.</p>
+          </div>
+          <div className="text-sm text-gray-500 bg-white px-4 py-2 rounded-full shadow-sm border border-gray-100">
+            {new Date().toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}
+          </div>
+        </div>
+
+        {/* Stats Grid */}
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+          {/* Total Items Card */}
+          <div className="bg-white rounded-2xl p-6 shadow-sm border border-gray-100 hover:shadow-md transition-shadow duration-300">
+            <div className="flex items-start justify-between">
+              <div>
+                <p className="text-sm font-medium text-gray-500">Total Menu Items</p>
+                <h3 className="text-3xl font-bold text-gray-900 mt-2">{totalItems}</h3>
               </div>
-              <div className="ml-4">
-                <p className="text-sm font-medium text-gray-600">Total Items</p>
-                <p className="text-2xl font-semibold text-gray-900">{totalItems}</p>
+              <div className="bg-blue-50 p-3 rounded-xl">
+                <Package className="h-6 w-6 text-blue-600" />
+              </div>
+            </div>
+            <div className="mt-4 flex items-center text-sm">
+              <span className="text-green-600 font-medium flex items-center">
+                <TrendingUp className="h-4 w-4 mr-1" />
+                Active
+              </span>
+              <span className="text-gray-400 mx-2">•</span>
+              <span className="text-gray-500">Across all categories</span>
+            </div>
+          </div>
+
+          {/* Active Restaurants Card */}
+          <div className="bg-white rounded-2xl p-6 shadow-sm border border-gray-100 hover:shadow-md transition-shadow duration-300">
+            <div className="flex items-start justify-between">
+              <div>
+                <p className="text-sm font-medium text-gray-500">Active Restaurants</p>
+                <h3 className="text-3xl font-bold text-gray-900 mt-2">{activeRestaurants}<span className="text-lg text-gray-400 font-normal">/{restaurantCount}</span></h3>
+              </div>
+              <div className="bg-orange-50 p-3 rounded-xl">
+                <Coffee className="h-6 w-6 text-orange-600" />
+              </div>
+            </div>
+            <div className="mt-4 flex items-center text-sm">
+              <div className="w-full bg-gray-100 rounded-full h-1.5">
+                <div 
+                  className="bg-orange-500 h-1.5 rounded-full" 
+                  style={{ width: `${(activeRestaurants / restaurantCount) * 100}%` }}
+                ></div>
               </div>
             </div>
           </div>
 
-          <div className="bg-white rounded-xl shadow-sm p-6">
-            <div className="flex items-center">
-              <div className="p-2 bg-green-500 rounded-lg">
-                <TrendingUp className="h-6 w-6 text-white" />
+          {/* Available Items Card */}
+          <div className="bg-white rounded-2xl p-6 shadow-sm border border-gray-100 hover:shadow-md transition-shadow duration-300">
+            <div className="flex items-start justify-between">
+              <div>
+                <p className="text-sm font-medium text-gray-500">Available Items</p>
+                <h3 className="text-3xl font-bold text-gray-900 mt-2">{availableItems}</h3>
               </div>
-              <div className="ml-4">
-                <p className="text-sm font-medium text-gray-600">Available Items</p>
-                <p className="text-2xl font-semibold text-gray-900">{availableItems}</p>
-              </div>
-            </div>
-          </div>
-
-          <div className="bg-white rounded-xl shadow-sm p-6">
-            <div className="flex items-center">
-              <div className="p-2 bg-cream-500 rounded-lg">
-                <Coffee className="h-6 w-6 text-white" />
-              </div>
-              <div className="ml-4">
-                <p className="text-sm font-medium text-gray-600">Popular Items</p>
-                <p className="text-2xl font-semibold text-gray-900">{popularItems}</p>
+              <div className="bg-green-50 p-3 rounded-xl">
+                <ShoppingCart className="h-6 w-6 text-green-600" />
               </div>
             </div>
-          </div>
-
-          <div className="bg-white rounded-xl shadow-sm p-6">
-            <div className="flex items-center">
-              <div className="p-2 bg-green-500 rounded-lg">
-                <Coffee className="h-6 w-6 text-white" />
-              </div>
-              <div className="ml-4">
-                <p className="text-sm font-medium text-gray-600">Restaurants</p>
-                <p className="text-2xl font-semibold text-gray-900">{activeRestaurants}/{restaurantCount}</p>
-              </div>
+            <div className="mt-4 flex items-center text-sm">
+              <span className="text-gray-500">
+                {totalItems - availableItems} items currently unavailable
+              </span>
             </div>
           </div>
         </div>
 
-        {/* Quick Actions */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
-          <div className="bg-white rounded-xl shadow-sm p-6">
-            <h3 className="text-lg font-playfair font-medium text-black mb-4">Quick Actions</h3>
-            <div className="space-y-3">
+        {/* Quick Actions Grid */}
+        <div>
+          <h3 className="text-xl font-playfair font-bold text-gray-900 mb-6">Quick Actions</h3>
+          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
+            <button
+              onClick={() => setCurrentView('add')}
+              className="flex flex-col items-center justify-center p-6 bg-white rounded-2xl shadow-sm border border-gray-100 hover:shadow-md hover:border-green-200 hover:bg-green-50/30 transition-all duration-300 group"
+            >
+              <div className="bg-green-100 p-4 rounded-full mb-3 group-hover:scale-110 transition-transform duration-300">
+                <Plus className="h-6 w-6 text-green-600" />
+              </div>
+              <span className="font-medium text-gray-900 text-center">Add Item</span>
+            </button>
+            
+            <button
+              onClick={() => setCurrentView('categories')}
+              className="flex flex-col items-center justify-center p-6 bg-white rounded-2xl shadow-sm border border-gray-100 hover:shadow-md hover:border-blue-200 hover:bg-blue-50/30 transition-all duration-300 group"
+            >
+              <div className="bg-blue-100 p-4 rounded-full mb-3 group-hover:scale-110 transition-transform duration-300">
+                <FolderOpen className="h-6 w-6 text-blue-600" />
+              </div>
+              <span className="font-medium text-gray-900 text-center">Categories</span>
+            </button>
 
-              <button
-                onClick={() => setCurrentView('categories')}
-                className="w-full flex items-center space-x-3 p-3 text-left hover:bg-gray-50 rounded-lg transition-colors duration-200"
-              >
-                <FolderOpen className="h-5 w-5 text-gray-400" />
-                <span className="font-medium text-gray-900">Manage Categories</span>
-              </button>
-              <button
-                onClick={() => setCurrentView('restaurants')}
-                className="w-full flex items-center space-x-3 p-3 text-left hover:bg-gray-50 rounded-lg transition-colors duration-200"
-              >
-                <Coffee className="h-5 w-5 text-gray-400" />
-                <span className="font-medium text-gray-900">Manage Restaurants</span>
-              </button>
+            <button
+              onClick={() => setCurrentView('restaurants')}
+              className="flex flex-col items-center justify-center p-6 bg-white rounded-2xl shadow-sm border border-gray-100 hover:shadow-md hover:border-orange-200 hover:bg-orange-50/30 transition-all duration-300 group"
+            >
+              <div className="bg-orange-100 p-4 rounded-full mb-3 group-hover:scale-110 transition-transform duration-300">
+                <Coffee className="h-6 w-6 text-orange-600" />
+              </div>
+              <span className="font-medium text-gray-900 text-center">Restaurants</span>
+            </button>
 
-              <button
-                onClick={() => setCurrentView('payments')}
-                className="w-full flex items-center space-x-3 p-3 text-left hover:bg-gray-50 rounded-lg transition-colors duration-200"
-              >
-                <CreditCard className="h-5 w-5 text-gray-400" />
-                <span className="font-medium text-gray-900">Payment Methods</span>
-              </button>
-              <button
-                onClick={() => setCurrentView('settings')}
-                className="w-full flex items-center space-x-3 p-3 text-left hover:bg-gray-50 rounded-lg transition-colors duration-200"
-              >
-                <Settings className="h-5 w-5 text-gray-400" />
-                <span className="font-medium text-gray-900">Site Settings</span>
-              </button>
-            </div>
+            <button
+              onClick={() => setCurrentView('promos')}
+              className="flex flex-col items-center justify-center p-6 bg-white rounded-2xl shadow-sm border border-gray-100 hover:shadow-md hover:border-purple-200 hover:bg-purple-50/30 transition-all duration-300 group"
+            >
+              <div className="bg-purple-100 p-4 rounded-full mb-3 group-hover:scale-110 transition-transform duration-300">
+                <Tag className="h-6 w-6 text-purple-600" />
+              </div>
+              <span className="font-medium text-gray-900 text-center">Promos</span>
+            </button>
+
+            <button
+              onClick={() => setCurrentView('payments')}
+              className="flex flex-col items-center justify-center p-6 bg-white rounded-2xl shadow-sm border border-gray-100 hover:shadow-md hover:border-pink-200 hover:bg-pink-50/30 transition-all duration-300 group"
+            >
+              <div className="bg-pink-100 p-4 rounded-full mb-3 group-hover:scale-110 transition-transform duration-300">
+                <CreditCard className="h-6 w-6 text-pink-600" />
+              </div>
+              <span className="font-medium text-gray-900 text-center">Payments</span>
+            </button>
+
+            <button
+              onClick={() => setCurrentView('settings')}
+              className="flex flex-col items-center justify-center p-6 bg-white rounded-2xl shadow-sm border border-gray-100 hover:shadow-md hover:border-gray-200 hover:bg-gray-50 transition-all duration-300 group"
+            >
+              <div className="bg-gray-100 p-4 rounded-full mb-3 group-hover:scale-110 transition-transform duration-300">
+                <Settings className="h-6 w-6 text-gray-600" />
+              </div>
+              <span className="font-medium text-gray-900 text-center">Settings</span>
+            </button>
           </div>
+        </div>
 
-          <div className="bg-white rounded-xl shadow-sm p-6">
-            <h3 className="text-lg font-playfair font-medium text-black mb-4">Categories Overview</h3>
-            <div className="space-y-3">
-              {categoryCounts.map((category) => (
-                <div key={category.id} className="flex items-center justify-between">
-                  <div className="flex items-center space-x-2">
-                    <span className="text-lg">{category.icon}</span>
-                    <span className="font-medium text-gray-900">{category.name}</span>
-                  </div>
-                  <span className="text-sm text-gray-500">{category.count} items</span>
+        {/* Categories Overview */}
+        <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-8">
+          <div className="flex items-center justify-between mb-6">
+            <h3 className="text-xl font-playfair font-bold text-gray-900">Categories Overview</h3>
+            <button 
+              onClick={() => setCurrentView('categories')}
+              className="text-sm font-medium text-green-600 hover:text-green-700 hover:underline"
+            >
+              View Details
+            </button>
+          </div>
+          
+          <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-5 gap-4">
+            {categoryCounts.map((category) => (
+              <div 
+                key={category.id} 
+                className="flex items-center p-4 rounded-xl bg-gray-50 border border-gray-100 hover:border-green-200 hover:shadow-sm transition-all duration-200"
+              >
+                <span className="text-2xl mr-3">{category.icon}</span>
+                <div>
+                  <p className="font-medium text-gray-900 text-sm">{category.name}</p>
+                  <p className="text-xs text-gray-500">{category.count} items</p>
                 </div>
-              ))}
-            </div>
+              </div>
+            ))}
           </div>
         </div>
       </div>
