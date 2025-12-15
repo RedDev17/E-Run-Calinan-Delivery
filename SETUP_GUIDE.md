@@ -3,11 +3,17 @@
 ## Recent Updates
 
 ### 1. Delivery Fee Calculation
-- **Base Fee**: ₱60
-- **Per 3km Block**: ₱15 (for every 3km or portion thereof)
-- **Total Delivery Fee**: ₱60 + (₱15 × number of 3km blocks)
+- **Base Fee**: ₱65
+- **Additional Fees (Additive)**:
+  - Every 2km: +₱15
+  - Every 3km: +₱25
+  - Every 5km: +₱35
+  - Every 10km: +₱50
+  - Every 25km: +₱60
+  - Every 30km: +₱100
+  - Every 45km: +₱100
 
-The system automatically calculates the delivery fee based on the distance from the restaurant to the delivery address using Google Maps.
+The system automatically calculates the total delivery fee by adding up all applicable fees based on the distance from the restaurant.
 
 ### 2. Google Maps Integration
 The checkout process now uses Google Maps to:

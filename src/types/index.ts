@@ -18,6 +18,7 @@ export interface MenuItem {
   description: string;
   basePrice: number;
   category: string;
+  restaurantName?: string;
   image?: string;
   popular?: boolean;
   available?: boolean;
@@ -31,7 +32,6 @@ export interface MenuItem {
   // Computed effective price (calculated in the app)
   effectivePrice?: number;
   isOnDiscount?: boolean;
-  restaurantName?: string;
 }
 
 export interface CartItem extends MenuItem {

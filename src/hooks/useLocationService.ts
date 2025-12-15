@@ -1,4 +1,4 @@
-import { useState, useCallback, useEffect } from 'react';
+import { useState, useCallback } from 'react';
 
 // Restaurant location: Calinan District Center
 const RESTAURANT_LOCATION = {
@@ -26,11 +26,11 @@ interface DistanceResult {
 export const useLocationService = () => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  // Use delivery center coordinates (will be geocoded, but start with default)
-  const [deliveryCenterCoords, setDeliveryCenterCoords] = useState<{ lat: number; lng: number }>({
+  // Use delivery center coordinates directly
+  const deliveryCenterCoords = {
     lat: DELIVERY_CENTER.lat,
     lng: DELIVERY_CENTER.lng
-  });
+  };
 
   // Calculate distance using Haversine formula (straight-line distance)
   const calculateDistanceHaversine = (lat1: number, lon1: number, lat2: number, lon2: number): number => {
@@ -314,21 +314,27 @@ export const useLocationService = () => {
     const baseFee = 65;
     let surcharge = 0;
 
-    // Tiered surcharges based on distance
+    // Cumulative surcharges based on distance (stacking)
+    if (distance > 2) {
+      surcharge += 15;
+    }
+    if (distance > 3) {
+      surcharge += 25;
+    }
+    if (distance > 5) {
+      surcharge += 35;
+    }
+    if (distance > 10) {
+      surcharge += 50;
+    }
+    if (distance > 25) {
+      surcharge += 60;
+    }
+    if (distance > 30) {
+      surcharge += 100;
+    }
     if (distance > 45) {
-      surcharge = 200; // Additional 100 on top of 30km rate (100 + 100)
-    } else if (distance > 30) {
-      surcharge = 100;
-    } else if (distance > 25) {
-      surcharge = 60;
-    } else if (distance > 10) {
-      surcharge = 50;
-    } else if (distance > 5) {
-      surcharge = 35;
-    } else if (distance > 3) {
-      surcharge = 25;
-    } else if (distance > 2) {
-      surcharge = 15;
+      surcharge += 200;
     }
     
     return baseFee + surcharge;

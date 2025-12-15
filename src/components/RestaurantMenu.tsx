@@ -91,6 +91,7 @@ const RestaurantMenu: React.FC<RestaurantMenuProps> = ({
                   description: item.description,
                   basePrice: item.basePrice,
                   category: item.category,
+                  restaurantName: restaurant.name,
                   image: item.image,
                   popular: item.popular,
                   available: item.available,
@@ -102,7 +103,6 @@ const RestaurantMenu: React.FC<RestaurantMenuProps> = ({
                   discountActive: item.discountActive,
                   effectivePrice: item.effectivePrice,
                   isOnDiscount: item.isOnDiscount,
-                  restaurantName: restaurant.name,
                 };
                 return (
                   <MenuItemCard

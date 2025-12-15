@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { ArrowLeft, Send } from 'lucide-react';
 import { supabase } from '../lib/supabase';
-import { useLocationService } from '../hooks/useLocationService';
+import { useGoogleMaps } from '../hooks/useGoogleMaps';
 import Header from './Header';
 
 interface RequestsProps {
@@ -9,7 +9,7 @@ interface RequestsProps {
 }
 
 const Requests: React.FC<RequestsProps> = ({ onBack }) => {
-  const { calculateDistanceBetweenAddresses, calculateDeliveryFee } = useLocationService();
+  const { calculateDistanceBetweenAddresses, calculateDeliveryFee } = useGoogleMaps();
 
   // Angkas/Padala form data
   const [angkasData, setAngkasData] = useState({

@@ -65,14 +65,8 @@ const Checkout: React.FC<CheckoutProps> = ({ cartItems, totalPrice, onBack }) =>
     }
   }, [paymentMethods]);
 
-  // Get customer's current location using browser geolocation
-  const getCurrentLocation = () => {
-    if (!navigator.geolocation) {
-      alert('Geolocation is not supported by your browser. Please enter your address manually.');
-      return;
-    }
 
-    setIsGettingLocation(true);
+  const getCurrentLocation = () => {
     setIsGettingLocation(true);
     navigator.geolocation.getCurrentPosition(
       async (position) => {
@@ -290,15 +284,15 @@ const Checkout: React.FC<CheckoutProps> = ({ cartItems, totalPrice, onBack }) =>
     setPromoError(null);
   };
 
-  // Group items by restaurant for the message
+  // Group items by restaurant
   const groupedItems = React.useMemo(() => {
     const groups: Record<string, CartItem[]> = {};
     cartItems.forEach(item => {
-      const name = item.restaurantName || 'Other Items';
-      if (!groups[name]) {
-        groups[name] = [];
+      const restaurantName = item.restaurantName || 'Other Items';
+      if (!groups[restaurantName]) {
+        groups[restaurantName] = [];
       }
-      groups[name].push(item);
+      groups[restaurantName].push(item);
     });
     return groups;
   }, [cartItems]);
@@ -320,33 +314,37 @@ const Checkout: React.FC<CheckoutProps> = ({ cartItems, totalPrice, onBack }) =>
 👤 Customer: ${customerName}
 📞 Contact: ${contactNumber}
 📍 Service: Delivery
-🏠 Address: ${address}${landmark ? `\n🗺️ Landmark: ${landmark}` : ''}${customerLocation ? `\n📍 Google Maps: https://www.google.com/maps?q=${customerLocation.lat},${customerLocation.lng}` : ''}
+🏠 Address: ${address}${landmark ? `\n🗺️ Landmark: ${landmark}` : ''}
 
 
 📋 ORDER DETAILS:
 
-${Object.entries(groupedItems).map(([restaurantName, items]) => {
-  return `📍 ${restaurantName}:\n` + items.map(item => {
-    let itemDetails = `• ${item.name}`;
-    if (item.selectedVariation) {
-      itemDetails += ` (${item.selectedVariation.name})`;
-    }
-    if (item.selectedAddOns && item.selectedAddOns.length > 0) {
-      itemDetails += ` + ${item.selectedAddOns.map(addOn => 
-        addOn.quantity && addOn.quantity > 1 
-          ? `${addOn.name} x${addOn.quantity}`
-          : addOn.name
-      ).join(', ')}`;
-    }
-    itemDetails += ` x${item.quantity} - ₱${item.totalPrice * item.quantity}`;
-    return itemDetails;
-  }).join('\n');
-}).join('\n\n')}
+${Object.entries(groupedItems).map(([restaurantName, items]) => `
+🏪 ${restaurantName}
+${items.map(item => {
+  let itemDetails = `• ${item.name}`;
+  if (item.selectedVariation) {
+    itemDetails += ` (${item.selectedVariation.name})`;
+  }
+  if (item.selectedAddOns && item.selectedAddOns.length > 0) {
+    itemDetails += ` + ${item.selectedAddOns.map(addOn => 
+      addOn.quantity && addOn.quantity > 1 
+        ? `${addOn.name} x${addOn.quantity}`
+        : addOn.name
+    ).join(', ')}`;
+  }
+  itemDetails += ` x${item.quantity} - ₱${item.totalPrice * item.quantity}`;
+  return itemDetails;
+}).join('\n')}`).join('\n')}
 
 💰 Subtotal: ₱${totalPrice}
+<<<<<<< HEAD
 🛵 Delivery Fee: ₱${deliveryFee.toFixed(2)}${distance !== null ? ` (${distance} km)` : ''}
 ${appliedPromo ? `🏷️ Promo Code: ${appliedPromo.code} (-₱${discountAmount.toFixed(2)})` : ''}
 💰 TOTAL: ₱${grandTotal.toFixed(2)}
+=======
+💰 TOTAL: ₱${finalTotalPrice.toFixed(2)}
+>>>>>>> e19fcde3e61ddc66d46a424e6613a61d8870a374
 
 ⚠️ Notice: The price will be different at the store or restaurant.
 
@@ -364,7 +362,7 @@ Please confirm this order to proceed. Thank you for choosing E-Run Calinan Deliv
     window.open(messengerUrl, '_blank');
   };
 
-  const isDetailsValid = customerName && contactNumber && address && isWithinArea === true;
+  const isDetailsValid = customerName && contactNumber && address;
 
   if (step === 'details') {
     return (
@@ -387,13 +385,13 @@ Please confirm this order to proceed. Thank you for choosing E-Run Calinan Deliv
             
             <div className="space-y-6 mb-6">
               {Object.entries(groupedItems).map(([restaurantName, items]) => (
-                <div key={restaurantName} className="border-b border-gray-200 pb-4 last:border-0">
-                  <h3 className="font-medium text-green-primary mb-3 flex items-center gap-2">
+                <div key={restaurantName}>
+                  <h3 className="font-medium text-green-primary mb-2 flex items-center gap-2">
                     <span className="text-lg">🏪</span> {restaurantName}
                   </h3>
-                  <div className="space-y-4">
+                  <div className="pl-4 border-l-2 border-gray-100 space-y-3">
                     {items.map((item) => (
-                      <div key={item.id} className="flex items-center justify-between py-2 bg-gray-50 rounded-lg px-3">
+                      <div key={item.id} className="flex items-center justify-between py-2 border-b border-gray-50 last:border-0">
                         <div>
                           <h4 className="font-medium text-black">{item.name}</h4>
                           {item.selectedVariation && (
@@ -477,7 +475,8 @@ Please confirm this order to proceed. Thank you for choosing E-Run Calinan Deliv
                         <X className="h-4 w-4" />
                       </button>
                     </div>
-                  )}
+                  )
+                  }
                   {promoError && (
                     <p className="mt-2 text-sm text-red-600 flex items-center">
                       <span className="mr-1">⚠️</span> {promoError}
@@ -491,7 +490,6 @@ Please confirm this order to proceed. Thank you for choosing E-Run Calinan Deliv
                     <span>-₱{discountAmount.toFixed(2)}</span>
                   </div>
               )}
-
               <div className="flex items-center justify-between text-2xl font-noto font-semibold text-black pt-2 border-t border-gray-200">
                 <span>Total:</span>
                 <span>₱{grandTotal.toFixed(2)}</span>
@@ -529,19 +527,10 @@ Please confirm this order to proceed. Thank you for choosing E-Run Calinan Deliv
                 />
               </div>
 
-              {/* Delivery Address with Map */}
+              {/* Delivery Address */}
               <div>
                 <label className="block text-sm font-medium text-black mb-2">
                   Delivery Address *
-                  {isCalculatingDistance && (
-                    <span className="ml-2 text-xs text-gray-500">Checking delivery area...</span>
-                  )}
-                  {isWithinArea === true && distance !== null && !isCalculatingDistance && (
-                    <span className="ml-2 text-xs text-green-600">✓ Within area • Distance: {distance} km</span>
-                  )}
-                  {isWithinArea === false && !isCalculatingDistance && (
-                    <span className="ml-2 text-xs text-red-600">✗ Outside delivery area</span>
-                  )}
                 </label>
                 <div className="flex flex-col gap-3 mb-2">
                   <button
@@ -717,7 +706,7 @@ Please confirm this order to proceed. Thank you for choosing E-Run Calinan Deliv
         <div className="bg-white rounded-xl shadow-sm p-6">
           <h2 className="text-2xl font-noto font-medium text-black mb-6">Final Order Summary</h2>
           
-          <div className="space-y-4 mb-6">
+          <div className="space-y-6 mb-6">
             <div className="bg-green-50 rounded-lg p-4 border border-green-100">
               <h4 className="font-medium text-black mb-2">Customer Details</h4>
               <p className="text-sm text-gray-600">Name: {customerName}</p>
@@ -728,13 +717,13 @@ Please confirm this order to proceed. Thank you for choosing E-Run Calinan Deliv
             </div>
 
             {Object.entries(groupedItems).map(([restaurantName, items]) => (
-              <div key={restaurantName} className="border-b border-gray-200 pb-4 last:border-0">
-                <h3 className="font-medium text-green-primary mb-3 flex items-center gap-2">
+              <div key={restaurantName}>
+                <h3 className="font-medium text-green-primary mb-2 flex items-center gap-2">
                   <span className="text-lg">🏪</span> {restaurantName}
                 </h3>
-                <div className="space-y-4">
+                <div className="pl-4 border-l-2 border-gray-100 space-y-3">
                   {items.map((item) => (
-                    <div key={item.id} className="flex items-center justify-between py-2 bg-gray-50 rounded-lg px-3">
+                    <div key={item.id} className="flex items-center justify-between py-2 border-b border-gray-50 last:border-0">
                       <div>
                         <h4 className="font-medium text-black">{item.name}</h4>
                         {item.selectedVariation && (
@@ -781,7 +770,6 @@ Please confirm this order to proceed. Thank you for choosing E-Run Calinan Deliv
                   <span>-₱{discountAmount.toFixed(2)}</span>
                 </div>
             )}
-
             <div className="flex items-center justify-between text-2xl font-noto font-semibold text-black pt-2 border-t border-gray-200">
               <span>Total:</span>
               <span>₱{grandTotal.toFixed(2)}</span>

@@ -9,10 +9,9 @@ import ImageUpload from './ImageUpload';
 import CategoryManager from './CategoryManager';
 import PaymentMethodManager from './PaymentMethodManager';
 import SiteSettingsManager from './SiteSettingsManager';
-
 import RestaurantManager from './RestaurantManager';
 import PromoCodeManager from './PromoCodeManager';
-
+import GroceryManager from './GroceryManager';
 
 const AdminDashboard: React.FC = () => {
   const [isAuthenticated, setIsAuthenticated] = useState(() => {
@@ -23,7 +22,7 @@ const AdminDashboard: React.FC = () => {
   const { menuItems, loading, addMenuItem, updateMenuItem, deleteMenuItem } = useMenu();
   const { categories } = useCategories();
   const { restaurants: adminRestaurants } = useRestaurantsAdmin();
-  const [currentView, setCurrentView] = useState<'dashboard' | 'items' | 'add' | 'edit' | 'categories' | 'payments' | 'settings' | 'restaurants' | 'promos'>('dashboard');
+  const [currentView, setCurrentView] = useState<'dashboard' | 'items' | 'add' | 'edit' | 'categories' | 'payments' | 'settings' | 'restaurants' | 'promos' | 'groceries'>('dashboard');
   const [editingItem, setEditingItem] = useState<MenuItem | null>(null);
   const [selectedItems, setSelectedItems] = useState<string[]>([]);
   const [isProcessing, setIsProcessing] = useState(false);
@@ -934,40 +933,6 @@ const AdminDashboard: React.FC = () => {
     );
   }
 
-  // Restaurants View
-  if (currentView === 'restaurants') {
-    return <RestaurantManager onBack={() => setCurrentView('dashboard')} />;
-  }
-
-
-  // Promo Codes View
-  if (currentView === 'promos') {
-    return (
-      <div className="min-h-screen bg-gray-50">
-        <div className="bg-white shadow-sm border-b">
-          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div className="flex items-center justify-between h-16">
-              <div className="flex items-center space-x-4">
-                <button
-                  onClick={() => setCurrentView('dashboard')}
-                  className="flex items-center space-x-2 text-gray-600 hover:text-black transition-colors duration-200"
-                >
-                  <ArrowLeft className="h-5 w-5" />
-                  <span>Dashboard</span>
-                </button>
-                <h1 className="text-2xl font-playfair font-semibold text-black">Promo Codes</h1>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        <div className="max-w-7xl mx-auto px-4 py-8">
-          <PromoCodeManager />
-        </div>
-      </div>
-    );
-  }
-
   // Dashboard View
   return (
     <div className="min-h-screen bg-gray-50 font-sans">
@@ -1100,6 +1065,16 @@ const AdminDashboard: React.FC = () => {
                 <Coffee className="h-6 w-6 text-orange-600" />
               </div>
               <span className="font-medium text-gray-900 text-center">Restaurants</span>
+            </button>
+
+            <button
+              onClick={() => setCurrentView('groceries')}
+              className="flex flex-col items-center justify-center p-6 bg-white rounded-2xl shadow-sm border border-gray-100 hover:shadow-md hover:border-yellow-200 hover:bg-yellow-50/30 transition-all duration-300 group"
+            >
+              <div className="bg-yellow-100 p-4 rounded-full mb-3 group-hover:scale-110 transition-transform duration-300">
+                <ShoppingCart className="h-6 w-6 text-yellow-600" />
+              </div>
+              <span className="font-medium text-gray-900 text-center">Groceries</span>
             </button>
 
             <button

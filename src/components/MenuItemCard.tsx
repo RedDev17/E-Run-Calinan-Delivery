@@ -105,17 +105,22 @@ const MenuItemCard: React.FC<MenuItemCardProps> = ({
       <div className={`bg-white rounded-xl shadow-sm hover:shadow-md transition-all duration-300 overflow-hidden group animate-scale-in border border-gray-200 ${!item.available ? 'opacity-60' : ''}`}>
         {/* Image Container with Badges */}
         <div className="relative h-40 md:h-44 bg-gradient-to-br from-gray-50 to-gray-100">
-          <img
-            src={item.image || '/images/fallback-food.png'}
-            alt={item.name}
-            className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
-            loading="lazy"
-            decoding="async"
-            onError={(e) => {
-              e.currentTarget.src = '/images/fallback-food.png';
-              e.currentTarget.onerror = null;
-            }}
-          />
+          {item.image ? (
+            <img
+              src={item.image}
+              alt={item.name}
+              className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
+              loading="lazy"
+              decoding="async"
+              onError={(e) => {
+                e.currentTarget.style.display = 'none';
+                e.currentTarget.nextElementSibling?.classList.remove('hidden');
+              }}
+            />
+          ) : null}
+          <div className={`absolute inset-0 flex items-center justify-center ${item.image ? 'hidden' : ''}`}>
+            <div className="text-6xl opacity-20 text-gray-400">☕</div>
+          </div>
           
           {/* Badges */}
           <div className="absolute top-3 left-3 flex flex-col gap-2">
