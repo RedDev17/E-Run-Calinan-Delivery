@@ -45,6 +45,9 @@ const Checkout: React.FC<CheckoutProps> = ({ cartItems, totalPrice, onBack }) =>
 
 
   const [ipAddress, setIpAddress] = useState<string | undefined>(undefined);
+  
+  // Ref to skip next geocode update (prevent overwriting precise coords with address geocode)
+  const skipNextGeocode = React.useRef(false);
 
   // Fetch IP address
   React.useEffect(() => {
@@ -80,6 +83,7 @@ const Checkout: React.FC<CheckoutProps> = ({ cartItems, totalPrice, onBack }) =>
           );
           const data = await response.json();
           if (data && data.display_name) {
+            skipNextGeocode.current = true;
             setAddress(data.display_name);
             setIsAddressReadOnly(true);
           }
@@ -116,6 +120,7 @@ const Checkout: React.FC<CheckoutProps> = ({ cartItems, totalPrice, onBack }) =>
   // Handle manual location selection on map
   const handleLocationSelect = async (lat: number, lng: number) => {
     setCustomerLocation({ lat, lng });
+    setIsCalculatingDistance(true);
     
     // Reverse geocode to get address
     try {
@@ -124,6 +129,7 @@ const Checkout: React.FC<CheckoutProps> = ({ cartItems, totalPrice, onBack }) =>
       );
       const data = await response.json();
       if (data && data.display_name) {
+        skipNextGeocode.current = true;
         setAddress(data.display_name);
         setIsAddressReadOnly(false); // Allow editing even after drag
       }
@@ -140,16 +146,32 @@ const Checkout: React.FC<CheckoutProps> = ({ cartItems, totalPrice, onBack }) =>
       if (distanceResult.routeCoordinates) {
         setRouteCoordinates(distanceResult.routeCoordinates);
       }
+
+      // Check if within area
+      if (distanceResult.distance > maxDeliveryRadius) {
+          setIsWithinArea(false);
+          setAreaCheckError(`We only deliver to addresses within ${maxDeliveryRadius}km from our restaurant location.`);
+      } else {
+          setIsWithinArea(true);
+          setAreaCheckError(null);
+      }
     }
     
     // Update route
     await updateRoute(lat, lng);
+    setIsCalculatingDistance(false);
   };
 
   // Calculate distance and delivery fee when address changes
+
   React.useEffect(() => {
     if (address.trim()) {
       const timeoutId = setTimeout(async () => {
+        if (skipNextGeocode.current) {
+          skipNextGeocode.current = false;
+          return;
+        }
+
         setIsCalculatingDistance(true);
         setAreaCheckError(null);
         
@@ -338,13 +360,9 @@ ${items.map(item => {
 }).join('\n')}`).join('\n')}
 
 💰 Subtotal: ₱${totalPrice}
-<<<<<<< HEAD
 🛵 Delivery Fee: ₱${deliveryFee.toFixed(2)}${distance !== null ? ` (${distance} km)` : ''}
 ${appliedPromo ? `🏷️ Promo Code: ${appliedPromo.code} (-₱${discountAmount.toFixed(2)})` : ''}
 💰 TOTAL: ₱${grandTotal.toFixed(2)}
-=======
-💰 TOTAL: ₱${finalTotalPrice.toFixed(2)}
->>>>>>> e19fcde3e61ddc66d46a424e6613a61d8870a374
 
 ⚠️ Notice: The price will be different at the store or restaurant.
 
