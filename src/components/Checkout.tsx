@@ -50,6 +50,7 @@ const Checkout: React.FC<CheckoutProps> = ({ cartItems, totalPrice, onBack }) =>
   
   // Ref to skip next geocode update (prevent overwriting precise coords with address geocode)
   const skipNextGeocode = React.useRef(false);
+  const prevAddress = React.useRef(address);
 
   // Fetch IP address
   React.useEffect(() => {
@@ -122,54 +123,67 @@ const Checkout: React.FC<CheckoutProps> = ({ cartItems, totalPrice, onBack }) =>
 
   // Handle manual location selection on map
   const handleLocationSelect = async (lat: number, lng: number) => {
+    skipNextGeocode.current = true; // IMMEDIATELY set skip to true to prevent any race conditions
     setShouldFitBounds(false); // Don't auto-zoom when manually selecting/dragging
     setCustomerLocation({ lat, lng });
     setIsCalculatingDistance(true);
     
-    // Reverse geocode to get address
     try {
-      const response = await fetch(
-        `https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lng}&zoom=18&addressdetails=1`
-      );
-      const data = await response.json();
-      if (data && data.display_name) {
-        skipNextGeocode.current = true;
-        setAddress(data.display_name);
-        setIsAddressReadOnly(false); // Allow editing even after drag
+      // Reverse geocode to get address
+      try {
+        const controller = new AbortController();
+        const timeoutId = setTimeout(() => controller.abort(), 5000); // 5s timeout
+        
+        const response = await fetch(
+          `https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lng}&zoom=18&addressdetails=1`,
+          { signal: controller.signal }
+        );
+        clearTimeout(timeoutId);
+        
+        const data = await response.json();
+        if (data && data.display_name) {
+          // skipNextGeocode.current = true; // Already set at start
+          setAddress(data.display_name);
+          setIsAddressReadOnly(false); // Allow editing even after drag
+        }
+      } catch (err) {
+        console.error('Reverse geocoding error:', err);
       }
-    } catch (err) {
-      console.error('Reverse geocoding error:', err);
-    }
-    
-    // Calculate distance
-    const distanceResult = await calculateDistance(`${lat},${lng}`);
-    if (distanceResult) {
-      setDistance(distanceResult.distance);
-      const fee = calculateDeliveryFee(distanceResult.distance);
-      setDeliveryFee(fee);
-      if (distanceResult.routeCoordinates) {
-        setRouteCoordinates(distanceResult.routeCoordinates);
-      }
+      
+      // Calculate distance
+      const distanceResult = await calculateDistance(`${lat},${lng}`);
+      if (distanceResult) {
+        setDistance(distanceResult.distance);
+        const fee = calculateDeliveryFee(distanceResult.distance);
+        setDeliveryFee(fee);
+        if (distanceResult.routeCoordinates) {
+          setRouteCoordinates(distanceResult.routeCoordinates);
+        }
 
-      // Check if within area
-      if (distanceResult.distance > maxDeliveryRadius) {
-          setIsWithinArea(false);
-          setAreaCheckError(`We only deliver to addresses within ${maxDeliveryRadius}km from our restaurant location.`);
-      } else {
-          setIsWithinArea(true);
-          setAreaCheckError(null);
+        // Check if within area
+        if (distanceResult.distance > maxDeliveryRadius) {
+            setIsWithinArea(false);
+            setAreaCheckError(`We only deliver to addresses within ${maxDeliveryRadius}km from our restaurant location.`);
+        } else {
+            setIsWithinArea(true);
+            setAreaCheckError(null);
+        }
       }
+      
+      // Update route
+      await updateRoute(lat, lng);
+    } finally {
+      setIsCalculatingDistance(false);
     }
-    
-    // Update route
-    await updateRoute(lat, lng);
-    setIsCalculatingDistance(false);
   };
 
   // Calculate distance and delivery fee when address changes
 
   React.useEffect(() => {
-    if (address.trim()) {
+    // Only run if address actually changed
+    if (address.trim() && address !== prevAddress.current) {
+      prevAddress.current = address;
+      
       const timeoutId = setTimeout(async () => {
         if (skipNextGeocode.current) {
           skipNextGeocode.current = false;
@@ -179,53 +193,56 @@ const Checkout: React.FC<CheckoutProps> = ({ cartItems, totalPrice, onBack }) =>
         setIsCalculatingDistance(true);
         setAreaCheckError(null);
         
-        // First check if address is within delivery area
-        const areaCheck = await isWithinDeliveryArea(address);
-        setIsWithinArea(areaCheck.within);
-        
-        if (areaCheck.error) {
-          setAreaCheckError(areaCheck.error);
-        }
-        
-        // Only calculate distance and fee if address is within delivery area
-        if (areaCheck.within) {
-          const result = await calculateDistance(address);
-          if (result) {
-            setDistance(result.distance);
-            const fee = calculateDeliveryFee(result.distance);
-            setDeliveryFee(fee);
-            if (result.routeCoordinates) {
-              setRouteCoordinates(result.routeCoordinates);
-            }
-          } else {
-            setDistance(null);
-            setDeliveryFee(60);
+        try {
+          // First check if address is within delivery area
+          const areaCheck = await isWithinDeliveryArea(address);
+          setIsWithinArea(areaCheck.within);
+          
+          if (areaCheck.error) {
+            setAreaCheckError(areaCheck.error);
           }
           
-
-          // Get coordinates for the address to show on map
-          try {
-            const coords = await geocodeAddressOSM(address);
-            if (coords) {
-              setShouldFitBounds(true);
-              setCustomerLocation(coords);
+          // Only calculate distance and fee if address is within delivery area
+          if (areaCheck.within) {
+            const result = await calculateDistance(address);
+            if (result) {
+              setDistance(result.distance);
+              const fee = calculateDeliveryFee(result.distance);
+              setDeliveryFee(fee);
+              if (result.routeCoordinates) {
+                setRouteCoordinates(result.routeCoordinates);
+              }
+            } else {
+              setDistance(null);
+              setDeliveryFee(calculateDeliveryFee(null));
             }
-          } catch (err) {
-            console.error('Geocoding error:', err);
+            
+
+            // Get coordinates for the address to show on map
+            try {
+              const coords = await geocodeAddressOSM(address);
+              if (coords) {
+                setShouldFitBounds(true);
+                setCustomerLocation(coords);
+              }
+            } catch (err) {
+              console.error('Geocoding error:', err);
+            }
+          } else {
+            // Address is outside delivery area
+            setDistance(null);
+            setDeliveryFee(0);
+            setCustomerLocation(null);
           }
-        } else {
-          // Address is outside delivery area
-          setDistance(null);
-          setDeliveryFee(0);
-          setCustomerLocation(null);
+        } finally {
+          setIsCalculatingDistance(false);
         }
-        setIsCalculatingDistance(false);
       }, 1000); // Debounce for 1 second
 
       return () => clearTimeout(timeoutId);
     } else {
       setDistance(null);
-      setDeliveryFee(60);
+      setDeliveryFee(calculateDeliveryFee(null));
       setCustomerLocation(null);
       setIsWithinArea(null);
       setAreaCheckError(null);

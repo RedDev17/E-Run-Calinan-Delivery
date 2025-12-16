@@ -27,10 +27,8 @@ export const useLocationService = () => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   // Use delivery center coordinates directly
-  const deliveryCenterCoords = {
-    lat: DELIVERY_CENTER.lat,
-    lng: DELIVERY_CENTER.lng
-  };
+  // Use delivery center coordinates directly
+  const deliveryCenterCoords = DELIVERY_CENTER;
 
   // Calculate distance using Haversine formula (straight-line distance)
   const calculateDistanceHaversine = (lat1: number, lon1: number, lat2: number, lon2: number): number => {
