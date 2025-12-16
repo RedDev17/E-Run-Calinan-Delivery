@@ -68,23 +68,24 @@ interface DeliveryMapProps {
   address?: string;
   onLocationSelect?: (lat: number, lng: number) => void;
   routeCoordinates?: [number, number][] | null;
+  fitBounds?: boolean;
 }
 
 // Component to fit map bounds to show both markers
-function MapBounds({ restaurantLocation, customerLocation }: { restaurantLocation: { lat: number; lng: number }; customerLocation: { lat: number; lng: number } | null }) {
+function MapBounds({ restaurantLocation, customerLocation, fitBounds = true }: { restaurantLocation: { lat: number; lng: number }; customerLocation: { lat: number; lng: number } | null; fitBounds?: boolean }) {
   const map = useMap();
 
   useEffect(() => {
-    if (customerLocation) {
+    if (customerLocation && fitBounds) {
       const bounds = L.latLngBounds(
         [restaurantLocation.lat, restaurantLocation.lng],
         [customerLocation.lat, customerLocation.lng]
       );
       map.fitBounds(bounds, { padding: [50, 50] });
-    } else {
+    } else if (!customerLocation) {
       map.setView([restaurantLocation.lat, restaurantLocation.lng], 13);
     }
-  }, [map, restaurantLocation, customerLocation]);
+  }, [map, restaurantLocation, customerLocation, fitBounds]);
 
   return null;
 }
@@ -95,7 +96,8 @@ const DeliveryMap: React.FC<DeliveryMapProps> = ({
   distance,
   address,
   onLocationSelect,
-  routeCoordinates
+  routeCoordinates,
+  fitBounds = true
 }) => {
   const [mapReady, setMapReady] = useState(false);
   const markerRef = useRef<L.Marker>(null);
@@ -152,7 +154,7 @@ const DeliveryMap: React.FC<DeliveryMapProps> = ({
           url="https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png"
         />
         
-        <MapBounds restaurantLocation={restaurantLocation} customerLocation={customerLocation} />
+        <MapBounds restaurantLocation={restaurantLocation} customerLocation={customerLocation} fitBounds={fitBounds} />
 
         {/* Restaurant Marker */}
         <Marker position={[restaurantLocation.lat, restaurantLocation.lng]} icon={restaurantIcon}>

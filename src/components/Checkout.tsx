@@ -34,7 +34,9 @@ const Checkout: React.FC<CheckoutProps> = ({ cartItems, totalPrice, onBack }) =>
   const [isWithinArea, setIsWithinArea] = useState<boolean | null>(null);
   const [areaCheckError, setAreaCheckError] = useState<string | null>(null);
   const [isAddressReadOnly, setIsAddressReadOnly] = useState(false);
+
   const [routeCoordinates, setRouteCoordinates] = useState<[number, number][] | null>(null);
+  const [shouldFitBounds, setShouldFitBounds] = useState(true);
 
   // Promo Code State
   const [promoCodeInput, setPromoCodeInput] = useState('');
@@ -74,6 +76,7 @@ const Checkout: React.FC<CheckoutProps> = ({ cartItems, totalPrice, onBack }) =>
     navigator.geolocation.getCurrentPosition(
       async (position) => {
         const { latitude, longitude } = position.coords;
+        setShouldFitBounds(true);
         setCustomerLocation({ lat: latitude, lng: longitude });
         
         // Reverse geocode to get address
@@ -119,6 +122,7 @@ const Checkout: React.FC<CheckoutProps> = ({ cartItems, totalPrice, onBack }) =>
 
   // Handle manual location selection on map
   const handleLocationSelect = async (lat: number, lng: number) => {
+    setShouldFitBounds(false); // Don't auto-zoom when manually selecting/dragging
     setCustomerLocation({ lat, lng });
     setIsCalculatingDistance(true);
     
@@ -198,10 +202,12 @@ const Checkout: React.FC<CheckoutProps> = ({ cartItems, totalPrice, onBack }) =>
             setDeliveryFee(60);
           }
           
+
           // Get coordinates for the address to show on map
           try {
             const coords = await geocodeAddressOSM(address);
             if (coords) {
+              setShouldFitBounds(true);
               setCustomerLocation(coords);
             }
           } catch (err) {
@@ -599,6 +605,7 @@ Please confirm this order to proceed. Thank you for choosing E-Run Calinan Deliv
                       address={address}
                       onLocationSelect={handleLocationSelect}
                       routeCoordinates={routeCoordinates}
+                      fitBounds={shouldFitBounds}
                     />
                     <p className="text-xs text-gray-500 mt-2 text-center flex items-center justify-center gap-1">
                       <span>💡</span> Tip: You can drag the blue pin to your exact location.
