@@ -1,9 +1,13 @@
 import React, { useState } from 'react';
-import { Plus, Edit, Trash2, Save, X, Tag, Calendar, DollarSign, Percent } from 'lucide-react';
+import { Plus, Edit, Trash2, Save, X, Tag, Calendar, DollarSign, Percent, ArrowLeft } from 'lucide-react';
 import { PromoCode } from '../types';
 import { usePromoCodes } from '../hooks/usePromoCodes';
 
-const PromoCodeManager: React.FC = () => {
+interface PromoCodeManagerProps {
+  onBack: () => void;
+}
+
+const PromoCodeManager: React.FC<PromoCodeManagerProps> = ({ onBack }) => {
   const { promoCodes, loading, addPromoCode, updatePromoCode, deletePromoCode } = usePromoCodes();
   const [isEditing, setIsEditing] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);

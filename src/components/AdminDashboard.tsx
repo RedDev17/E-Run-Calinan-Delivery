@@ -933,6 +933,21 @@ const AdminDashboard: React.FC = () => {
     );
   }
 
+  // Restaurants View
+  if (currentView === 'restaurants') {
+    return <RestaurantManager onBack={() => setCurrentView('dashboard')} />;
+  }
+
+  // Promos View
+  if (currentView === 'promos') {
+    return <PromoCodeManager onBack={() => setCurrentView('dashboard')} />;
+  }
+
+  // Groceries View
+  if (currentView === 'groceries') {
+    return <GroceryManager onBack={() => setCurrentView('dashboard')} />;
+  }
+
   // Dashboard View
   return (
     <div className="min-h-screen bg-gray-50 font-sans">
