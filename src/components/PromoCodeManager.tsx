@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Plus, Edit, Trash2, Save, X, Tag, Calendar, DollarSign, Percent, ArrowLeft } from 'lucide-react';
+import { Plus, Edit, Trash2, Save, X, Tag, DollarSign, Percent, ArrowLeft } from 'lucide-react';
 import { PromoCode } from '../types';
 import { usePromoCodes } from '../hooks/usePromoCodes';
 

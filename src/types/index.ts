@@ -107,33 +107,6 @@ export interface RestaurantMenuItem {
   addOns?: AddOn[];
   discountPrice?: number;
   discountStartDate?: string;
-  discountEndDate?: string;
-  discountActive?: boolean;
-  effectivePrice?: number;
-  isOnDiscount?: boolean;
-}
-
-// Grocery Item (for Pabili service)
-export interface Grocery {
-  id: string;
-  name: string;
-  description: string;
-  price: number;
-  category: string;
-  image_url?: string;
-  unit: string; // e.g., 'piece', 'kg', 'pack', 'bottle'
-  available: boolean;
-  popular: boolean;
-  sort_order: number;
-  created_at: string;
-  updated_at: string;
-}
-
-// Padala Booking
-export interface PadalaBooking {
-  id: string;
-  customer_name: string;
-  contact_number: string;
   pickup_address: string;
   delivery_address: string;
   item_description: string;
