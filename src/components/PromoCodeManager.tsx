@@ -95,17 +95,48 @@ const PromoCodeManager: React.FC<PromoCodeManagerProps> = ({ onBack }) => {
 
   if (isEditing) {
     return (
-      <div className="bg-white rounded-xl shadow-sm p-6">
-        <div className="flex items-center justify-between mb-6">
-          <h2 className="text-xl font-semibold text-black">
-            {editingId ? 'Edit Promo Code' : 'Add New Promo Code'}
-          </h2>
-          <button onClick={() => setIsEditing(false)} className="text-gray-500 hover:text-black">
-            <X className="h-6 w-6" />
-          </button>
+
+      <div className="min-h-screen bg-gray-50">
+        <div className="bg-white shadow-sm border-b">
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div className="flex items-center justify-between h-16">
+              <div className="flex items-center space-x-4">
+                <button
+                  onClick={() => setIsEditing(false)}
+                  className="flex items-center space-x-2 text-gray-600 hover:text-black transition-colors duration-200"
+                >
+                  <ArrowLeft className="h-5 w-5" />
+                  <span>Back</span>
+                </button>
+                <h1 className="text-2xl font-playfair font-semibold text-black">
+                  {editingId ? 'Edit Promo Code' : 'Add New Promo Code'}
+                </h1>
+              </div>
+              <div className="flex space-x-3">
+                <button
+                  onClick={() => setIsEditing(false)}
+                  className="px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors duration-200 flex items-center space-x-2"
+                >
+                  <X className="h-4 w-4" />
+                  <span>Cancel</span>
+                </button>
+                <button
+                  onClick={handleSave}
+                  className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors duration-200 flex items-center space-x-2"
+                >
+                  <Save className="h-4 w-4" />
+                  <span>Save</span>
+                </button>
+              </div>
+            </div>
+          </div>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <div className="max-w-2xl mx-auto px-4 py-8">
+          <div className="bg-white rounded-xl shadow-sm p-8">
+            <div className="space-y-6">
+
+
           <div>
             <label className="block text-sm font-medium text-black mb-2">Code *</label>
             <input
@@ -236,39 +267,42 @@ const PromoCodeManager: React.FC<PromoCodeManagerProps> = ({ onBack }) => {
               <span className="text-sm font-medium text-black">New Users Only</span>
             </label>
           </div>
-        </div>
-
-        <div className="mt-8 flex justify-end space-x-3">
-          <button
-            onClick={() => setIsEditing(false)}
-            className="px-6 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors duration-200"
-          >
-            Cancel
-          </button>
-          <button
-            onClick={handleSave}
-            className="px-6 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors duration-200 flex items-center space-x-2"
-          >
-            <Save className="h-4 w-4" />
-            <span>Save Promo Code</span>
-          </button>
+            </div>
+          </div>
         </div>
       </div>
     );
+
   }
 
   return (
-    <div className="space-y-6">
-      <div className="flex justify-between items-center">
-        <h2 className="text-2xl font-playfair font-semibold text-black">Promo Codes</h2>
-        <button
-          onClick={handleAddNew}
-          className="flex items-center space-x-2 bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700 transition-colors duration-200"
-        >
-          <Plus className="h-4 w-4" />
-          <span>Add New Code</span>
-        </button>
+
+    <div className="min-h-screen bg-gray-50">
+      <div className="bg-white shadow-sm border-b">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="flex items-center justify-between h-16">
+            <div className="flex items-center space-x-4">
+              <button
+                onClick={onBack}
+                className="flex items-center space-x-2 text-gray-600 hover:text-black transition-colors duration-200"
+              >
+                <ArrowLeft className="h-5 w-5" />
+                <span>Dashboard</span>
+              </button>
+              <h1 className="text-2xl font-playfair font-semibold text-black">Promo Codes</h1>
+            </div>
+            <button
+              onClick={handleAddNew}
+              className="flex items-center space-x-2 bg-black text-white px-4 py-2 rounded-lg hover:bg-gray-800 transition-colors duration-200"
+            >
+              <Plus className="h-4 w-4" />
+              <span>Add New Code</span>
+            </button>
+          </div>
+        </div>
       </div>
+
+      <div className="max-w-7xl mx-auto px-4 py-8">
 
       <div className="bg-white rounded-xl shadow-sm overflow-hidden">
         <div className="overflow-x-auto">
@@ -365,6 +399,7 @@ const PromoCodeManager: React.FC<PromoCodeManagerProps> = ({ onBack }) => {
             </tbody>
           </table>
         </div>
+      </div>
       </div>
     </div>
   );
