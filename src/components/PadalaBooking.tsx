@@ -26,7 +26,7 @@ const PadalaBooking: React.FC<PadalaBookingProps> = ({ onBack, title = 'Padala',
     notes: ''
   });
   const [distance, setDistance] = useState<number | null>(null);
-  const [deliveryFee, setDeliveryFee] = useState<number>(60);
+  const [deliveryFee, setDeliveryFee] = useState<number>(65);
   const [isCalculating, setIsCalculating] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
@@ -54,12 +54,12 @@ const PadalaBooking: React.FC<PadalaBookingProps> = ({ onBack, title = 'Padala',
         setDeliveryFee(fee);
       } else {
         setDistance(null);
-        setDeliveryFee(60);
+        setDeliveryFee(65);
       }
     } catch (error) {
       console.error('Error calculating fee:', error);
       setDistance(null);
-      setDeliveryFee(60);
+      setDeliveryFee(65);
     } finally {
       setIsCalculating(false);
     }
@@ -151,7 +151,7 @@ Please confirm this ${serviceLabel} booking. Thank you! 🛵`;
         notes: ''
       });
       setDistance(null);
-      setDeliveryFee(60);
+      setDeliveryFee(65);
     } catch (error) {
       console.error('Error submitting booking:', error);
       alert('Failed to submit booking. Please try again.');

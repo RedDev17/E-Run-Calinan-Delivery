@@ -26,7 +26,7 @@ const Checkout: React.FC<CheckoutProps> = ({ cartItems, totalPrice, onBack }) =>
   const [notes, setNotes] = useState('');
   // Delivery fee calculation
   const [distance, setDistance] = useState<number | null>(null);
-  const [deliveryFee, setDeliveryFee] = useState<number>(60); // Default base fee
+  const [deliveryFee, setDeliveryFee] = useState<number>(65); // Default base fee
   const [isCalculatingDistance, setIsCalculatingDistance] = useState(false);
   const [customerLocation, setCustomerLocation] = useState<{ lat: number; lng: number } | null>(null);
   const [isGettingLocation, setIsGettingLocation] = useState(false);
